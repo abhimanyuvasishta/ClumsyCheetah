@@ -24,8 +24,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export async function generateStaticParams() {
-  const products = await listProducts();
-  return products.map((p) => ({ slug: p.slug }));
+  try {
+    const products = await listProducts();
+    return products.map((p) => ({ slug: p.slug }));
+  } catch {
+    return [];
+  }
 }
 
 export default async function ProductPage({ params }: Props) {

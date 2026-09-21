@@ -1,16 +1,21 @@
 import { createClient } from "@supabase/supabase-js";
-import { isSupabaseConfigured } from "./env";
+import { getSupabasePublicConfig } from "./env";
 
 /** Anon client with no cookies — safe at build time (`generateStaticParams`). */
 export function createPublicSupabaseClient() {
-  if (!isSupabaseConfigured()) {
+  const config = getSupabasePublicConfig();
+  if (!config) {
     return null;
   }
 
-  return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-    },
-  });
+  try {
+    return createClient(config.url, config.anonKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    });
+  } catch {
+    return null;
+  }
 }
