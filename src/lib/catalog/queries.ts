@@ -6,8 +6,8 @@ import {
   seedCollections,
   seedProducts,
 } from "@/data/catalog-seed";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { createPublicSupabaseClient } from "@/lib/supabase/public";
 
 function lowestPrice(product: CatalogProduct): number {
   return lowestVariantPricePaise(product);
@@ -192,7 +192,7 @@ export async function listCategories(): Promise<CatalogCategory[]> {
   if (!isSupabaseConfigured()) {
     return seedCategories;
   }
-  const supabase = await createServerSupabaseClient();
+  const supabase = await createPublicSupabaseClient();
   if (!supabase) return seedCategories;
   const { data, error } = await supabase
     .from("categories")
@@ -217,7 +217,7 @@ export async function listCollections(): Promise<CatalogCollection[]> {
   if (!isSupabaseConfigured()) {
     return seedCollections;
   }
-  const supabase = await createServerSupabaseClient();
+  const supabase = await createPublicSupabaseClient();
   if (!supabase) return seedCollections;
   const { data, error } = await supabase
     .from("collections")
@@ -242,7 +242,7 @@ export async function listProducts(filters: ShopFilters = {}): Promise<CatalogPr
   if (!isSupabaseConfigured()) {
     return applyFilters(seedProducts, filters);
   }
-  const supabase = await createServerSupabaseClient();
+  const supabase = await createPublicSupabaseClient();
   if (!supabase) return applyFilters(seedProducts, filters);
 
   let query = supabase.from("products").select(productSelect).eq("status", "ACTIVE").is("deleted_at", null);
@@ -278,7 +278,7 @@ export async function listProductsByCollection(slug: string): Promise<CatalogPro
     return seedProducts.filter((p) => p.category?.slug === slug);
   }
 
-  const supabase = await createServerSupabaseClient();
+  const supabase = await createPublicSupabaseClient();
   if (!supabase) {
     const slugs = collectionProductSlugs[slug] ?? [];
     if (slugs.length) {
