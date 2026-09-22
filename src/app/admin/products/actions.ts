@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requireStaff, staffDb } from "@/lib/admin/access";
+import { privilegedDb, requireStaff, staffDb } from "@/lib/admin/access";
 import { rupeesToPaise } from "@/lib/money";
 import { slugify } from "@/lib/slug";
 import { CATALOG_WRITE_ROLES } from "@/types/roles";
@@ -253,4 +253,25 @@ export async function duplicateProduct(productId: string) {
   }
   revalidatePath("/admin/products");
   redirect(`/admin/products/${copy.id}`);
+}
+
+export async function clearAllProducts(form: FormData) {
+  await requireStaff(CATALOG_WRITE_ROLES);
+  if (String(form.get("confirm") ?? "").trim() !== "DELETE") {
+    throw new Error("Type DELETE to remove every product");
+  }
+  const db = await privilegedDb(CATALOG_WRITE_ROLES);
+  await db.from("order_items").update({ product_id: null, variant_id: null }).not("id", "is", null);
+  await db.from("inventory_movements").delete().neq("id", "00000000-0000-4000-8000-000000000000");
+  await db.from("inventory").delete().neq("id", "00000000-0000-4000-8000-000000000000");
+  await db.from("collection_products").delete().neq("product_id", "00000000-0000-4000-8000-000000000000");
+  await db.from("product_tags").delete().neq("product_id", "00000000-0000-4000-8000-000000000000");
+  await db.from("product_categories").delete().neq("product_id", "00000000-0000-4000-8000-000000000000");
+  await db.from("product_images").delete().neq("id", "00000000-0000-4000-8000-000000000000");
+  await db.from("product_variants").delete().neq("id", "00000000-0000-4000-8000-000000000000");
+  const { error } = await db.from("products").delete().neq("id", "00000000-0000-4000-8000-000000000000");
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/products");
+  revalidatePath("/shop");
+  revalidatePath("/");
 }

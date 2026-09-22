@@ -3,6 +3,7 @@ import { listAdminProducts } from "@/lib/admin/catalog";
 import { formatInr } from "@/lib/money";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { clearAllProducts } from "@/app/admin/products/actions";
 
 export default async function AdminProductsPage({
   searchParams,
@@ -29,6 +30,20 @@ export default async function AdminProductsPage({
           New product
         </Link>
       </div>
+      <form action={clearAllProducts} className="mt-3 flex flex-wrap items-end gap-2 text-sm">
+        <label className="text-xs text-muted-foreground">
+          Remove every product
+          <input
+            name="confirm"
+            placeholder='Type DELETE'
+            className="mt-1 block h-8 rounded-lg border px-2 font-mono text-xs"
+            autoComplete="off"
+          />
+        </label>
+        <button type="submit" className={cn(buttonVariants({ variant: "destructive", size: "sm" }))}>
+          Clear catalog
+        </button>
+      </form>
       <form className="mt-4 flex flex-wrap gap-2">
         <input name="q" defaultValue={q} placeholder="Search name or SKU" className="h-8 rounded-lg border px-2 text-sm" />
         <select name="status" defaultValue={status ?? ""} className="h-8 rounded-lg border px-2 text-sm">

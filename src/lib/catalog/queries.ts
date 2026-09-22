@@ -253,11 +253,11 @@ export async function listProducts(filters: ShopFilters = {}): Promise<CatalogPr
   if (filters.newArrival) query = query.eq("is_new_arrival", true);
 
   const { data, error } = await query;
-  if (error || !data) {
+  if (error) {
     return applyFilters(seedProducts, filters);
   }
 
-  const mapped = (data as unknown as ProductRow[]).map(mapProduct);
+  const mapped = ((data ?? []) as unknown as ProductRow[]).map(mapProduct);
   const withCategory = filters.category
     ? mapped.filter((p) => p.category?.slug === filters.category)
     : mapped;
@@ -266,7 +266,10 @@ export async function listProducts(filters: ShopFilters = {}): Promise<CatalogPr
 
 export async function getProductBySlug(slug: string): Promise<CatalogProduct | null> {
   const all = await listProducts();
-  return all.find((p) => p.slug === slug) ?? seedProducts.find((p) => p.slug === slug) ?? null;
+  const found = all.find((p) => p.slug === slug);
+  if (found) return found;
+  if (isSupabaseConfigured()) return null;
+  return seedProducts.find((p) => p.slug === slug) ?? null;
 }
 
 export async function listProductsByCollection(slug: string): Promise<CatalogProduct[]> {
