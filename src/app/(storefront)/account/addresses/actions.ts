@@ -4,7 +4,21 @@ import { revalidatePath } from "next/cache";
 import { getAuthUser } from "@/lib/auth/staff";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
-export type AddressState = { error?: string; ok?: boolean };
+export type SavedAddress = {
+  id: string;
+  label: string | null;
+  full_name: string;
+  phone: string;
+  line1: string;
+  line2: string | null;
+  landmark: string | null;
+  city: string;
+  state: string;
+  pincode: string;
+  is_default: boolean;
+};
+
+export type AddressState = { error?: string; ok?: boolean; address?: SavedAddress };
 
 function field(form: FormData, key: string) {
   return String(form.get(key) ?? "").trim();
@@ -28,7 +42,7 @@ export async function saveAddress(_: AddressState, form: FormData): Promise<Addr
   if (isDefault) {
     await supabase.from("addresses").update({ is_default: false }).eq("user_id", user.userId);
   }
-  const { error } = await supabase.from("addresses").insert({
+  const { data, error } = await supabase.from("addresses").insert({
     user_id: user.userId,
     label: field(form, "label") || "Home",
     full_name: fullName,
@@ -42,10 +56,11 @@ export async function saveAddress(_: AddressState, form: FormData): Promise<Addr
     country: "IN",
     delivery_instructions: field(form, "delivery_instructions") || null,
     is_default: isDefault,
-  });
+  }).select("id, label, full_name, phone, line1, line2, landmark, city, state, pincode, is_default").single();
   if (error) return { error: error.message };
   revalidatePath("/account/addresses");
-  return { ok: true };
+  revalidatePath("/checkout");
+  return { ok: true, address: data ?? undefined };
 }
 
 export async function deleteAddress(id: string) {
