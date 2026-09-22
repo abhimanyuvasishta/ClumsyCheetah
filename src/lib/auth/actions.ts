@@ -59,3 +59,10 @@ export async function signUpWithPassword(input: {
   }
   return { success: true };
 }
+
+export async function signOut(): Promise<void> {
+  const supabase = createBrowserSupabaseClient();
+  if (!supabase) return;
+  await supabase.auth.signOut();
+}
+

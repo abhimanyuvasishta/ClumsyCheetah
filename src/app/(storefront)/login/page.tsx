@@ -1,14 +1,29 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { BrandMark } from "@/components/storefront/brand-mark";
 import { LoginForm } from "./login-form";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { getAuthUser } from "@/lib/auth/staff";
 
 export const metadata: Metadata = { title: "Login" };
+export const dynamic = "force-dynamic";
 
-export default function LoginPage() {
+function safeNext(value: string | undefined) {
+  if (value && value.startsWith("/") && !value.startsWith("//")) return value;
+  return "/account";
+}
+
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
+  const { next: nextRaw } = await searchParams;
+  const next = safeNext(nextRaw);
+  const user = await getAuthUser();
+  if (user) {
+    redirect(next);
+  }
+
   return (
     <div className="mx-auto grid min-h-[70vh] max-w-5xl items-center gap-10 px-4 py-12 lg:grid-cols-2">
       <div>

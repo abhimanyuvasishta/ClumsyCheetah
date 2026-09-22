@@ -10,7 +10,7 @@ import { signInWithPassword } from "@/lib/auth/actions";
 export function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
-  const next = params.get("next") ?? "/";
+  const next = params.get("next") ?? "/account";
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
