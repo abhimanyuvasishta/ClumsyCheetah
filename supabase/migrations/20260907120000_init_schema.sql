@@ -83,6 +83,32 @@ as $$
   select auth.uid();
 $$;
 
+-- ---------------------------------------------------------------------------
+-- Identity
+-- ---------------------------------------------------------------------------
+
+create table public.profiles (
+  id uuid primary key references auth.users (id) on delete cascade,
+  full_name text,
+  phone text,
+  avatar_url text,
+  status public.profile_status not null default 'ACTIVE',
+  marketing_opt_in boolean not null default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  deleted_at timestamptz
+);
+
+create table public.user_roles (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles (id) on delete cascade,
+  role public.app_role not null,
+  assigned_by uuid references public.profiles (id),
+  created_at timestamptz not null default now(),
+  revoked_at timestamptz,
+  unique (user_id, role)
+);
+
 create or replace function public.has_role(check_role public.app_role)
 returns boolean
 language sql
@@ -146,32 +172,6 @@ as $$
       or public.has_role('ORDER_MANAGER')
       or public.has_role('STORE_MANAGER');
 $$;
-
--- ---------------------------------------------------------------------------
--- Identity
--- ---------------------------------------------------------------------------
-
-create table public.profiles (
-  id uuid primary key references auth.users (id) on delete cascade,
-  full_name text,
-  phone text,
-  avatar_url text,
-  status public.profile_status not null default 'ACTIVE',
-  marketing_opt_in boolean not null default false,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  deleted_at timestamptz
-);
-
-create table public.user_roles (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references public.profiles (id) on delete cascade,
-  role public.app_role not null,
-  assigned_by uuid references public.profiles (id),
-  created_at timestamptz not null default now(),
-  revoked_at timestamptz,
-  unique (user_id, role)
-);
 
 create table public.addresses (
   id uuid primary key default gen_random_uuid(),
