@@ -1,26 +1,52 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { formatInr } from "@/lib/money";
 
 export const metadata: Metadata = { title: "Admin dashboard" };
 
-const cards = [
-  { label: "Today’s revenue", value: "—" },
-  { label: "Today’s orders", value: "—" },
-  { label: "Pending", value: "—" },
-  { label: "Preparing", value: "—" },
-  { label: "Completed", value: "—" },
-  { label: "Cancelled", value: "—" },
-  { label: "AOV", value: "—" },
-  { label: "Low stock", value: "—" },
-];
+export default async function AdminHomePage() {
+  const supabase = await createServerSupabaseClient();
+  let products = 0;
+  let active = 0;
+  let orders = 0;
+  let placed = 0;
+  let customers = 0;
+  let todayPaise = 0;
 
-export default function AdminHomePage() {
+  if (supabase) {
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const [{ count: p }, { count: a }, { count: o }, { count: pl }, { count: c }, today] = await Promise.all([
+      supabase.from("products").select("*", { count: "exact", head: true }).is("deleted_at", null),
+      supabase.from("products").select("*", { count: "exact", head: true }).eq("status", "ACTIVE").is("deleted_at", null),
+      supabase.from("orders").select("*", { count: "exact", head: true }),
+      supabase.from("orders").select("*", { count: "exact", head: true }).eq("status", "PLACED"),
+      supabase.from("profiles").select("*", { count: "exact", head: true }),
+      supabase.from("orders").select("total_paise").gte("placed_at", start.toISOString()),
+    ]);
+    products = p ?? 0;
+    active = a ?? 0;
+    orders = o ?? 0;
+    placed = pl ?? 0;
+    customers = c ?? 0;
+    todayPaise = (today.data ?? []).reduce((sum, row) => sum + (row.total_paise ?? 0), 0);
+  }
+
+  const cards = [
+    { label: "Today’s revenue", value: todayPaise ? formatInr(todayPaise) : "—" },
+    { label: "Orders (all)", value: String(orders) },
+    { label: "Placed / kitchen", value: String(placed) },
+    { label: "Products", value: String(products) },
+    { label: "Active on shop", value: String(active) },
+    { label: "Customers", value: String(customers) },
+  ];
+
   return (
     <div>
       <h1 className="text-xl font-semibold tracking-tight">Dashboard</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Live metrics connect in Phase 10. Cards are wired for date filters; values stay empty until orders exist.
-      </p>
-      <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <p className="mt-1 text-sm text-muted-foreground">Counts from Postgres. Payments still off.</p>
+      <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-3">
         {cards.map((card) => (
           <div key={card.label} className="rounded-lg border bg-white p-4">
             <p className="text-xs uppercase tracking-wide text-muted-foreground">{card.label}</p>
@@ -28,15 +54,16 @@ export default function AdminHomePage() {
           </div>
         ))}
       </div>
-      <div className="mt-6 grid gap-4 lg:grid-cols-2">
-        <section className="rounded-lg border bg-white p-4">
-          <h2 className="text-sm font-medium">Recent orders</h2>
-          <p className="mt-6 text-sm text-muted-foreground">Realtime order list ships in Phase 7.</p>
-        </section>
-        <section className="rounded-lg border bg-white p-4">
-          <h2 className="text-sm font-medium">Top products</h2>
-          <p className="mt-6 text-sm text-muted-foreground">Ranked once order_items exist.</p>
-        </section>
+      <div className="mt-6 flex flex-wrap gap-3 text-sm">
+        <Link href="/admin/products" className="underline">
+          Catalog
+        </Link>
+        <Link href="/admin/orders" className="underline">
+          Orders
+        </Link>
+        <Link href="/admin/customers" className="underline">
+          Customers
+        </Link>
       </div>
     </div>
   );

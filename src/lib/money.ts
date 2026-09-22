@@ -19,3 +19,16 @@ export function lineTotalPaise(unitPaise: number, quantity: number): number {
   }
   return unitPaise * quantity;
 }
+
+/** Rupees (shop display) to integer paise. Never store rupees. */
+export function rupeesToPaise(rupees: string | number): number {
+  const n = typeof rupees === "number" ? rupees : Number(String(rupees).replace(/,/g, "").trim());
+  if (!Number.isFinite(n) || n < 0) {
+    throw new Error("Price must be a number of rupees, 0 or more");
+  }
+  return Math.round(n * 100);
+}
+
+export function paiseToRupeesInput(paise: number): string {
+  return (Math.round(paise) / 100).toFixed(2);
+}

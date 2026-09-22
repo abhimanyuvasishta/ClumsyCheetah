@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { discountPercent, formatInr, lineTotalPaise } from "./money";
+import { discountPercent, formatInr, lineTotalPaise, rupeesToPaise } from "./money";
 
 describe("money", () => {
   it("formats paise as INR", () => {
@@ -13,5 +13,10 @@ describe("money", () => {
 
   it("computes line totals without trusting floats", () => {
     expect(lineTotalPaise(39900, 3)).toBe(119700);
+  });
+
+  it("converts rupees to paise on the server", () => {
+    expect(rupeesToPaise("749")).toBe(74900);
+    expect(rupeesToPaise("749.50")).toBe(74950);
   });
 });
