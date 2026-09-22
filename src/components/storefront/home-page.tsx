@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Wheat, Heart, Sparkles, Truck } from "lucide-react";
+import { HeroSlideshow, type HeroSlide } from "@/components/storefront/hero-slideshow";
 import { ProductCarousel } from "@/components/storefront/product-carousel";
 import { buttonVariants } from "@/components/ui/button";
 import { Price } from "@/components/storefront/price";
@@ -17,11 +18,13 @@ export function HomePage({
   bestsellers,
   signature,
   heroImage,
+  heroSlides,
 }: {
   categories: CatalogCategory[];
   bestsellers: CatalogProduct[];
   signature: CatalogProduct | null;
   heroImage: string;
+  heroSlides: HeroSlide[];
 }) {
   const ordered = homepageContent.categoryOrder
     .map((slug) => categories.find((c) => c.slug === slug))
@@ -54,9 +57,7 @@ export function HomePage({
         <div className="relative lg:col-span-6">
           <div className="absolute -left-6 top-10 hidden size-40 rounded-full bg-gold/35 lg:block" aria-hidden />
           <div className="absolute -right-4 bottom-8 hidden size-28 rounded-full bg-sky/35 lg:block" aria-hidden />
-          <div className="relative aspect-[4/5] overflow-hidden rounded-[1.5rem] bg-secondary sm:aspect-[5/6]">
-            <Image src={heroImage} alt="Signature bake from Clumsy Cheetah" fill priority className="object-cover" sizes="(max-width: 1024px) 100vw, 50vw" />
-          </div>
+          <HeroSlideshow slides={heroSlides.length ? heroSlides : [{ src: heroImage, alt: "Bakes from Clumsy Cheetah", href: "/shop" }]} />
         </div>
       </section>
 
@@ -109,7 +110,7 @@ export function HomePage({
       <section className="store-wrap grid items-center gap-8 py-8 lg:grid-cols-2 lg:gap-16">
         <div className="relative aspect-[4/5] overflow-hidden rounded-[1.4rem] bg-secondary sm:aspect-[5/4] lg:aspect-[4/5]">
           <Image
-            src={homepageContent.occasions.items[0]?.image ?? heroImage}
+            src={heroSlides[1]?.src ?? heroImage}
             alt=""
             fill
             className="object-cover"
@@ -155,9 +156,9 @@ export function HomePage({
       <section className="store-wrap py-16 md:py-20">
         <h2 className="font-heading text-3xl md:text-4xl">{homepageContent.occasions.heading}</h2>
         <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-4">
-          {homepageContent.occasions.items.map((item) => (
+          {homepageContent.occasions.items.map((item, i) => (
             <Link key={item.slug} href={`/collections/${item.slug}`} className="group relative min-h-40 overflow-hidden rounded-[1.1rem]">
-              <Image src={item.image} alt="" fill className="object-cover transition duration-500 group-hover:scale-105" />
+              <Image src={heroSlides[i % Math.max(heroSlides.length, 1)]?.src ?? item.image} alt="" fill className="object-cover transition duration-500 group-hover:scale-105" />
               <span className="absolute inset-0 bg-navy/30" />
               <span className="absolute bottom-3 left-3 font-heading text-xl text-white">{item.label}</span>
             </Link>
