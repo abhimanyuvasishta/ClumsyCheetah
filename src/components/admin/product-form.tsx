@@ -71,9 +71,13 @@ export function ProductForm({
             ))}
           </select>
         </div>
-        <div>
-          <Label htmlFor="thumbnail_url">Image URL</Label>
-          <Input id="thumbnail_url" name="thumbnail_url" defaultValue={product?.thumbnail_url ?? ""} className={field} />
+        <div className="sm:col-span-2">
+          <Label htmlFor="image">Product photo</Label>
+          {product?.thumbnail_url ? (
+            <img src={product.thumbnail_url} alt="" className="mt-1 h-24 w-24 rounded-lg object-cover" />
+          ) : null}
+          <Input id="image" name="image" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" className={field} />
+          <p className="mt-1 text-xs text-muted-foreground">JPG, PNG, or WebP. Max 8 MB. Stored in Supabase, not a URL field.</p>
         </div>
       </div>
       <div>

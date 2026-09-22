@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { privilegedDb, requireStaff, staffDb } from "@/lib/admin/access";
+import { formImageFile, storeProductImage } from "@/lib/admin/product-image";
 import { rupeesToPaise } from "@/lib/money";
 import { slugify } from "@/lib/slug";
 import { CATALOG_WRITE_ROLES } from "@/types/roles";
@@ -41,6 +42,7 @@ export async function createProduct(_: ActionState, form: FormData): Promise<Act
     const variantSku = formString(form, "variant_sku") || `${sku}-1`;
     const variantName = formString(form, "variant_name") || "Default";
     const categoryId = formString(form, "primary_category_id") || null;
+    const image = formImageFile(form);
 
     const { data: product, error } = await supabase
       .from("products")
@@ -51,7 +53,7 @@ export async function createProduct(_: ActionState, form: FormData): Promise<Act
         short_description: formString(form, "short_description") || null,
         long_description: formString(form, "long_description") || null,
         primary_category_id: categoryId,
-        thumbnail_url: formString(form, "thumbnail_url") || null,
+        thumbnail_url: null,
         status: formString(form, "status") || "DRAFT",
         is_featured: formBool(form, "is_featured"),
         is_bestseller: formBool(form, "is_bestseller"),
@@ -79,6 +81,19 @@ export async function createProduct(_: ActionState, form: FormData): Promise<Act
       await supabase.from("product_categories").upsert({ product_id: product.id, category_id: categoryId });
     }
 
+    if (image) {
+      const uploaded = await storeProductImage(await privilegedDb(CATALOG_WRITE_ROLES), product.id, image);
+      if ("error" in uploaded) return { error: uploaded.error };
+      await supabase.from("products").update({ thumbnail_url: uploaded.url }).eq("id", product.id);
+      await supabase.from("product_images").insert({
+        product_id: product.id,
+        url: uploaded.url,
+        alt: name,
+        sort_order: 0,
+        is_primary: true,
+      });
+    }
+
     revalidatePath("/admin/products");
     revalidatePath("/shop");
     redirect(`/admin/products/${product.id}`);
@@ -96,6 +111,20 @@ export async function updateProduct(productId: string, _: ActionState, form: For
     if (!name) return { error: "Name is required" };
     const slug = await uniqueSlug(formString(form, "slug") || name, productId);
     const categoryId = formString(form, "primary_category_id") || null;
+    const image = formImageFile(form);
+    let thumbnailUrl: string | undefined;
+    if (image) {
+      const uploaded = await storeProductImage(await privilegedDb(CATALOG_WRITE_ROLES), productId, image);
+      if ("error" in uploaded) return { error: uploaded.error };
+      thumbnailUrl = uploaded.url;
+      await supabase.from("product_images").insert({
+        product_id: productId,
+        url: uploaded.url,
+        alt: name,
+        sort_order: 0,
+        is_primary: true,
+      });
+    }
     const { error } = await supabase
       .from("products")
       .update({
@@ -105,7 +134,7 @@ export async function updateProduct(productId: string, _: ActionState, form: For
         short_description: formString(form, "short_description") || null,
         long_description: formString(form, "long_description") || null,
         primary_category_id: categoryId,
-        thumbnail_url: formString(form, "thumbnail_url") || null,
+        ...(thumbnailUrl ? { thumbnail_url: thumbnailUrl } : {}),
         status: formString(form, "status") || "DRAFT",
         is_featured: formBool(form, "is_featured"),
         is_bestseller: formBool(form, "is_bestseller"),
