@@ -50,7 +50,7 @@ export function StoreFooter() {
           <ul className="mt-3 space-y-2 text-sm">
             <li><Link href="/contact" className="hover:underline">Contact</Link></li>
             <li><Link href="/delivery" className="hover:underline">Delivery</Link></li>
-            <li><Link href="/account" className="hover:underline">Track order</Link></li>
+            <li><Link href="/account/orders" className="hover:underline">Track order</Link></li>
             <li><Link href="/faq" className="hover:underline">FAQs</Link></li>
           </ul>
         </div>
