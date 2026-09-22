@@ -77,8 +77,8 @@ export function StoreHeader({ categories }: { categories: CatalogCategory[] }) {
               key={item.href}
               href={item.href}
               className={cn(
-                "text-[0.925rem] tracking-wide text-foreground/75 transition hover:text-foreground",
-                pathname === item.href && "text-foreground",
+                "text-[0.925rem] tracking-wide text-foreground/75 transition hover:text-sky-deep",
+                pathname === item.href && "text-sky-deep",
               )}
             >
               {item.label}

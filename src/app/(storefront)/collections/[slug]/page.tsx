@@ -36,7 +36,7 @@ export default async function CollectionPage({ params }: Props) {
 
   return (
     <div>
-      <div className="relative min-h-[42vh] overflow-hidden bg-espresso text-[oklch(0.96_0.02_80)]">
+      <div className="relative min-h-[42vh] overflow-hidden bg-navy text-cream">
         {image ? <Image src={image} alt="" fill className="object-cover opacity-45" priority /> : null}
         <div className="store-wrap relative py-16 md:py-24">
           <Breadcrumbs
@@ -48,7 +48,7 @@ export default async function CollectionPage({ params }: Props) {
             ]}
           />
           <h1 className="mt-6 max-w-2xl font-heading text-4xl md:text-6xl">{hero?.heading ?? named?.name ?? slug}</h1>
-          <p className="mt-4 max-w-xl text-[oklch(0.88_0.02_80)]">{hero?.body ?? named?.description}</p>
+          <p className="mt-4 max-w-xl text-cream/80">{hero?.body ?? named?.description}</p>
         </div>
       </div>
       <div className="store-wrap py-12">

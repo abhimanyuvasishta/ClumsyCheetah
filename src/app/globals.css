@@ -13,6 +13,9 @@
   --color-blush: var(--blush);
   --color-gold: var(--gold);
   --color-cream: var(--cream);
+  --color-sky: var(--sky);
+  --color-sky-deep: var(--sky-deep);
+  --color-navy: var(--navy);
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
   --font-heading: var(--font-fraunces), "Times New Roman", serif;
@@ -57,37 +60,41 @@
 }
 
 :root {
-  --cream: oklch(0.975 0.014 82);
-  --surface: oklch(0.992 0.008 85);
-  --espresso: oklch(0.27 0.035 48);
-  --caramel: oklch(0.58 0.1 55);
-  --blush: oklch(0.72 0.07 18);
-  --gold: oklch(0.78 0.09 78);
+  /* From the Clumsy Cheetah Bakes seal: cream, cheetah gold, apron sky, ink lettering */
+  --cream: oklch(0.975 0.012 92);
+  --surface: oklch(0.99 0.006 95);
+  --espresso: oklch(0.3 0.025 55);
+  --caramel: oklch(0.74 0.13 72);
+  --gold: oklch(0.8 0.12 78);
+  --sky: oklch(0.72 0.1 232);
+  --sky-deep: oklch(0.55 0.11 235);
+  --navy: oklch(0.38 0.075 232);
+  --blush: oklch(0.78 0.06 230);
   --background: var(--cream);
   --foreground: var(--espresso);
   --card: var(--surface);
   --card-foreground: var(--espresso);
   --popover: var(--surface);
   --popover-foreground: var(--espresso);
-  --primary: oklch(0.32 0.045 48);
-  --primary-foreground: oklch(0.98 0.012 85);
-  --secondary: oklch(0.945 0.02 78);
+  --primary: var(--sky-deep);
+  --primary-foreground: oklch(0.99 0.01 95);
+  --secondary: oklch(0.94 0.03 230);
   --secondary-foreground: var(--espresso);
-  --muted: oklch(0.94 0.018 80);
-  --muted-foreground: oklch(0.5 0.03 52);
+  --muted: oklch(0.945 0.02 92);
+  --muted-foreground: oklch(0.48 0.03 55);
   --accent: var(--caramel);
-  --accent-foreground: oklch(0.22 0.03 48);
+  --accent-foreground: oklch(0.24 0.04 55);
   --destructive: oklch(0.55 0.16 28);
-  --border: oklch(0.9 0.02 78);
-  --input: oklch(0.9 0.02 78);
-  --ring: var(--caramel);
-  --chart-1: var(--caramel);
-  --chart-2: var(--espresso);
-  --chart-3: var(--blush);
+  --border: oklch(0.9 0.025 90);
+  --input: oklch(0.9 0.025 90);
+  --ring: var(--sky);
+  --chart-1: var(--sky-deep);
+  --chart-2: var(--caramel);
+  --chart-3: var(--espresso);
   --chart-4: var(--gold);
-  --chart-5: oklch(0.45 0.05 48);
-  --radius: 0.55rem;
-  --shadow-soft: 0 1px 0 oklch(0.3 0.04 48 / 0.04);
+  --chart-5: var(--sky);
+  --radius: 0.7rem;
+  --shadow-soft: 0 8px 28px oklch(0.55 0.11 235 / 0.08);
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -122,7 +129,7 @@
     letter-spacing: -0.03em;
   }
   ::selection {
-    background: color-mix(in oklch, var(--gold) 55%, white);
+    background: color-mix(in oklch, var(--sky) 40%, white);
     color: var(--espresso);
   }
 }

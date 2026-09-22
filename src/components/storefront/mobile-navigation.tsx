@@ -14,13 +14,13 @@ export function MobileNavigation() {
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
       <ul className="grid grid-cols-5">
         <li>
-          <Link href="/" className={cn("flex h-14 flex-col items-center justify-center gap-0.5 text-[10px]", pathname === "/" ? "text-foreground" : "text-muted-foreground")}>
+          <Link href="/" className={cn("flex h-14 flex-col items-center justify-center gap-0.5 text-[10px]", pathname === "/" ? "text-sky-deep" : "text-muted-foreground")}>
             <Home className="size-5" />
             Home
           </Link>
         </li>
         <li>
-          <Link href="/shop" className={cn("flex h-14 flex-col items-center justify-center gap-0.5 text-[10px]", pathname.startsWith("/shop") || pathname.startsWith("/collections") ? "text-foreground" : "text-muted-foreground")}>
+          <Link href="/shop" className={cn("flex h-14 flex-col items-center justify-center gap-0.5 text-[10px]", pathname.startsWith("/shop") || pathname.startsWith("/collections") ? "text-sky-deep" : "text-muted-foreground")}>
             <Store className="size-5" />
             Shop
           </Link>
@@ -32,13 +32,13 @@ export function MobileNavigation() {
           </button>
         </li>
         <li>
-          <Link href="/wishlist" className={cn("flex h-14 flex-col items-center justify-center gap-0.5 text-[10px]", pathname.startsWith("/wishlist") ? "text-foreground" : "text-muted-foreground")}>
+          <Link href="/wishlist" className={cn("flex h-14 flex-col items-center justify-center gap-0.5 text-[10px]", pathname.startsWith("/wishlist") ? "text-sky-deep" : "text-muted-foreground")}>
             <Heart className="size-5" />
             Saved
           </Link>
         </li>
         <li>
-          <Link href="/account" className={cn("flex h-14 flex-col items-center justify-center gap-0.5 text-[10px]", pathname.startsWith("/account") || pathname.startsWith("/login") ? "text-foreground" : "text-muted-foreground")}>
+          <Link href="/account" className={cn("flex h-14 flex-col items-center justify-center gap-0.5 text-[10px]", pathname.startsWith("/account") || pathname.startsWith("/login") ? "text-sky-deep" : "text-muted-foreground")}>
             <User className="size-5" />
             Account
           </Link>

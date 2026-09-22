@@ -52,8 +52,8 @@ export function HomePage({
           </div>
         </div>
         <div className="relative lg:col-span-6">
-          <div className="absolute -left-6 top-10 hidden size-40 rounded-full bg-gold/30 lg:block" aria-hidden />
-          <div className="absolute -right-4 bottom-8 hidden size-28 rounded-full bg-blush/40 lg:block" aria-hidden />
+          <div className="absolute -left-6 top-10 hidden size-40 rounded-full bg-gold/35 lg:block" aria-hidden />
+          <div className="absolute -right-4 bottom-8 hidden size-28 rounded-full bg-sky/35 lg:block" aria-hidden />
           <div className="relative aspect-[4/5] overflow-hidden rounded-[1.5rem] bg-secondary sm:aspect-[5/6]">
             <Image src={heroImage} alt="Signature bake from Clumsy Cheetah" fill priority className="object-cover" sizes="(max-width: 1024px) 100vw, 50vw" />
           </div>
@@ -66,7 +66,7 @@ export function HomePage({
             const Icon = valueIcons[i] ?? Wheat;
             return (
               <li key={item.title} className="flex gap-3">
-                <Icon className="mt-0.5 size-5 text-caramel" aria-hidden />
+                <Icon className="mt-0.5 size-5 text-sky-deep" aria-hidden />
                 <div>
                   <p className="font-medium">{item.title}</p>
                   <p className="text-sm text-muted-foreground">{item.text}</p>
@@ -88,7 +88,7 @@ export function HomePage({
                 {c.imageUrl ? (
                   <Image src={c.imageUrl} alt="" fill className="object-cover transition duration-500 group-hover:scale-105" />
                 ) : null}
-                <span className="absolute inset-0 bg-[oklch(0.22_0.04_48_/_0.28)]" />
+                <span className="absolute inset-0 bg-navy/35" />
                 <span className="absolute inset-x-0 bottom-0 p-4 text-white">
                   <span className="block font-heading text-2xl">{c.name}</span>
                   <span className="mt-1 block text-sm text-white/85">{homepageContent.categoryCopy[c.slug] ?? c.description}</span>
@@ -126,9 +126,9 @@ export function HomePage({
       </section>
 
       {signature && sigVariant ? (
-        <section className="mt-10 bg-espresso py-16 text-[oklch(0.96_0.02_80)] md:py-24">
+        <section className="mt-10 bg-navy py-16 text-cream md:py-24">
           <div className="store-wrap grid items-center gap-10 lg:grid-cols-2">
-            <div className="relative aspect-[4/5] overflow-hidden rounded-[1.3rem]">
+            <div className="relative aspect-[4/5] overflow-hidden rounded-[1.3rem] ring-2 ring-sky/40">
               <Image
                 src={signature.thumbnailUrl ?? heroImage}
                 alt={signature.name}
@@ -137,15 +137,15 @@ export function HomePage({
               />
             </div>
             <div>
-              <p className="eyebrow text-[oklch(0.78_0.06_70)]">Signature</p>
+              <p className="eyebrow text-sky">Signature</p>
               <h2 className="mt-3 font-heading text-4xl md:text-5xl">{homepageContent.signature.heading}</h2>
               <p className="mt-4 font-heading text-2xl">{signature.name}</p>
-              <p className="mt-3 max-w-md text-[oklch(0.84_0.02_80)]">{signature.longDescription ?? signature.shortDescription}</p>
+              <p className="mt-3 max-w-md text-cream/80">{signature.longDescription ?? signature.shortDescription}</p>
               <div className="mt-6">
                 <Price paise={sigVariant.pricePaise} compareAtPaise={sigVariant.compareAtPaise} className="text-xl" />
               </div>
               <div className="mt-6 max-w-xs">
-                <AddToCartButton product={signature} variant={sigVariant} className="bg-[oklch(0.78_0.09_78)] text-espresso hover:bg-[oklch(0.82_0.09_78)]" />
+                <AddToCartButton product={signature} variant={sigVariant} className="bg-gold text-espresso hover:bg-gold/90" />
               </div>
             </div>
           </div>
@@ -158,7 +158,7 @@ export function HomePage({
           {homepageContent.occasions.items.map((item) => (
             <Link key={item.slug} href={`/collections/${item.slug}`} className="group relative min-h-40 overflow-hidden rounded-[1.1rem]">
               <Image src={item.image} alt="" fill className="object-cover transition duration-500 group-hover:scale-105" />
-              <span className="absolute inset-0 bg-[oklch(0.2_0.04_48_/_0.3)]" />
+              <span className="absolute inset-0 bg-navy/30" />
               <span className="absolute bottom-3 left-3 font-heading text-xl text-white">{item.label}</span>
             </Link>
           ))}

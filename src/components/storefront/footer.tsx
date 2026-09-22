@@ -4,11 +4,11 @@ import { homepageContent } from "@/data/homepage";
 
 export function StoreFooter() {
   return (
-    <footer className="mt-auto border-t border-border bg-espresso text-[oklch(0.93_0.02_80)]">
+    <footer className="mt-auto border-t border-sky/20 bg-navy text-cream">
       <div className="store-wrap grid gap-10 py-16 sm:grid-cols-2 lg:grid-cols-5">
         <div className="lg:col-span-2">
           <BrandMark onDark size="lg" />
-          <p className="mt-4 max-w-sm text-sm text-[oklch(0.82_0.02_80)]">
+          <p className="mt-4 max-w-sm text-sm text-cream/75">
             A Bandra bakery that takes pastry seriously and itself only slightly less so.
           </p>
           <form className="mt-6 flex max-w-sm gap-2">
@@ -22,13 +22,13 @@ export function StoreFooter() {
               placeholder="Email"
               className="h-11 flex-1 rounded-full border border-white/20 bg-white/5 px-4 text-sm"
             />
-            <button type="submit" className="h-11 rounded-full bg-[oklch(0.78_0.09_78)] px-4 text-sm text-espresso">
+            <button type="submit" className="h-11 rounded-full bg-gold px-4 text-sm text-espresso">
               Join
             </button>
           </form>
         </div>
         <div>
-          <p className="eyebrow text-[oklch(0.75_0.04_70)]">Shop</p>
+          <p className="eyebrow text-sky">Shop</p>
           <ul className="mt-3 space-y-2 text-sm">
             {[
               ["Cakes", "/collections/cakes"],
@@ -46,7 +46,7 @@ export function StoreFooter() {
           </ul>
         </div>
         <div>
-          <p className="eyebrow text-[oklch(0.75_0.04_70)]">Help</p>
+          <p className="eyebrow text-sky">Help</p>
           <ul className="mt-3 space-y-2 text-sm">
             <li><Link href="/contact" className="hover:underline">Contact</Link></li>
             <li><Link href="/delivery" className="hover:underline">Delivery</Link></li>
@@ -55,7 +55,7 @@ export function StoreFooter() {
           </ul>
         </div>
         <div>
-          <p className="eyebrow text-[oklch(0.75_0.04_70)]">About</p>
+          <p className="eyebrow text-sky">About</p>
           <ul className="mt-3 space-y-2 text-sm">
             <li><Link href="/about" className="hover:underline">Our story</Link></li>
             <li><Link href="/contact" className="hover:underline">Careers</Link></li>
@@ -70,7 +70,7 @@ export function StoreFooter() {
         </div>
       </div>
       <div className="border-t border-white/10">
-        <div className="store-wrap flex flex-col gap-2 py-4 text-xs text-[oklch(0.72_0.02_80)] sm:flex-row sm:justify-between">
+        <div className="store-wrap flex flex-col gap-2 py-4 text-xs text-cream/60 sm:flex-row sm:justify-between">
           <p>© {new Date().getFullYear()} Clumsy Cheetah. Baked in Mumbai.</p>
           <p>UPI · Cards · COD — through checkout, never stored here.</p>
         </div>

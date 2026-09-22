@@ -103,7 +103,7 @@ export function ProductDetail({
             {variant ? (
               <div className="mt-4 flex items-baseline gap-3">
                 <Price paise={variant.pricePaise} compareAtPaise={variant.compareAtPaise} className="text-2xl" />
-                {discount ? <span className="text-sm text-caramel">{discount}% off</span> : null}
+                {discount ? <span className="text-sm text-sky-deep">{discount}% off</span> : null}
               </div>
             ) : null}
             <p className="mt-4 text-muted-foreground">{product.shortDescription}</p>

@@ -11,7 +11,7 @@ const sizes = {
 type BrandMarkProps = {
   className?: string;
   size?: keyof typeof sizes;
-  /** Dark footer / espresso surfaces */
+  /** Dark footer / navy surfaces */
   onDark?: boolean;
   /** Crest only, no wordmark — use when the seal is large enough to read */
   markOnly?: boolean;
@@ -28,8 +28,8 @@ export function BrandMark({ className, size = "md", onDark = false, markOnly = f
     >
       <span
         className={cn(
-          "relative shrink-0 overflow-hidden rounded-full bg-[oklch(0.975_0.014_82)] ring-1",
-          onDark ? "ring-[oklch(0.78_0.09_78_/_0.45)]" : "ring-[oklch(0.32_0.045_48_/_0.12)]",
+          "relative shrink-0 overflow-hidden rounded-full bg-cream ring-2",
+          onDark ? "ring-sky/70" : "ring-sky/45",
           seal.className,
         )}
       >
@@ -37,7 +37,7 @@ export function BrandMark({ className, size = "md", onDark = false, markOnly = f
           src="/brand/logo.png"
           alt=""
           fill
-          className="object-cover"
+          className="object-contain"
           sizes={`${seal.px}px`}
           priority={size !== "lg"}
         />
@@ -47,7 +47,7 @@ export function BrandMark({ className, size = "md", onDark = false, markOnly = f
           <span
             className={cn(
               "font-heading tracking-[-0.03em]",
-              onDark ? "text-[oklch(0.97_0.01_85)]" : "text-foreground",
+              onDark ? "text-cream" : "text-foreground",
               size === "sm" && "text-[1.05rem]",
               size === "md" && "text-[1.2rem] sm:text-[1.35rem]",
               size === "lg" && "text-2xl",
@@ -58,7 +58,7 @@ export function BrandMark({ className, size = "md", onDark = false, markOnly = f
           <span
             className={cn(
               "mt-1 text-[0.62rem] font-medium uppercase tracking-[0.28em]",
-              onDark ? "text-[oklch(0.82_0.06_75)]" : "text-caramel",
+              onDark ? "text-sky" : "text-sky-deep",
             )}
           >
             Bakes
