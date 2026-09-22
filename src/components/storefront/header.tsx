@@ -6,36 +6,40 @@ import { usePathname } from "next/navigation";
 import { Heart, Menu, Search, ShoppingBag, User } from "lucide-react";
 import { BrandMark } from "@/components/storefront/brand-mark";
 import { useCart } from "@/components/storefront/cart-provider";
-import { homepageContent } from "@/data/homepage";
+import { useStorefrontConfig } from "@/components/storefront/storefront-config-provider";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import type { CatalogCategory } from "@/types/catalog";
 
 export function AnnouncementBar() {
+  const { chrome } = useStorefrontConfig();
   return (
     <div className="bg-primary px-4 py-1.5 text-center text-[11px] tracking-[0.12em] text-primary-foreground">
-      {homepageContent.announcement}
+      {chrome.announcement}
     </div>
   );
 }
 
 export function StoreHeader({ categories }: { categories: CatalogCategory[] }) {
   const pathname = usePathname();
+  const { chrome, layout } = useStorefrontConfig();
   const { count, setDrawerOpen, setSearchOpen } = useCart();
   const [compact, setCompact] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
+    if (!layout.headerSticky) return;
     const onScroll = () => setCompact(window.scrollY > 24);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  }, [layout.headerSticky]);
 
   return (
     <header
       className={cn(
-        "sticky top-0 z-40 border-b bg-background/90 backdrop-blur-md transition-[padding,box-shadow] duration-300",
+        "z-40 border-b bg-background/90 backdrop-blur-md transition-[padding,box-shadow] duration-300",
+        layout.headerSticky ? "sticky top-0" : "relative",
         compact ? "border-border shadow-[var(--shadow-soft)]" : "border-transparent",
       )}
     >
@@ -50,7 +54,7 @@ export function StoreHeader({ categories }: { categories: CatalogCategory[] }) {
               <BrandMark size="sm" />
             </SheetHeader>
             <nav className="flex flex-col px-4 pb-8">
-              {homepageContent.nav.map((item) => (
+              {chrome.nav.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
@@ -72,7 +76,7 @@ export function StoreHeader({ categories }: { categories: CatalogCategory[] }) {
         <BrandMark size={compact ? "sm" : "md"} />
 
         <nav className="ml-8 hidden items-center gap-7 lg:flex">
-          {homepageContent.nav.map((item) => (
+          {chrome.nav.map((item) => (
             <Link
               key={item.href}
               href={item.href}

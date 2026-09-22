@@ -1,6 +1,6 @@
 import { HomePage } from "@/components/storefront/home-page";
 import type { HeroSlide } from "@/components/storefront/hero-slideshow";
-import { homepageContent } from "@/data/homepage";
+import { getStorefrontConfig } from "@/lib/storefront/queries";
 import { getProductBySlug, listCategories, listProducts, listProductsByCollection } from "@/lib/catalog/queries";
 import type { CatalogProduct } from "@/types/catalog";
 
@@ -23,15 +23,16 @@ function slidesFromProducts(products: CatalogProduct[]): HeroSlide[] {
 }
 
 export default async function Page() {
-  const [categories, bestsellers, featured, catalog] = await Promise.all([
+  const [categories, bestsellers, featured, catalog, appearance] = await Promise.all([
     listCategories(),
     listProductsByCollection("best-sellers"),
     listProducts({ bestseller: true }),
     listProducts(),
+    getStorefrontConfig(),
   ]);
   const loved = bestsellers.length ? bestsellers : featured;
   const signature =
-    (await getProductBySlug(homepageContent.signature.fallbackSlug)) ?? loved[0] ?? null;
+    (await getProductBySlug(appearance.home.signature.fallbackSlug)) ?? loved[0] ?? null;
   const ranked = [
     ...loved,
     ...catalog.filter((product) => !loved.some((lovedProduct) => lovedProduct.id === product.id)),
@@ -51,6 +52,7 @@ export default async function Page() {
       signature={signature}
       heroImage={heroImage}
       heroSlides={heroSlides}
+      appearance={appearance}
     />
   );
 }

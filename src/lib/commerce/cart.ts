@@ -1,5 +1,4 @@
 import { lineTotalPaise } from "@/lib/money";
-import { homepageContent } from "@/data/homepage";
 
 export type CartLine = {
   productId: string;
@@ -35,8 +34,8 @@ export function cartSubtotal(lines: CartLine[]): number {
   return lines.reduce((sum, line) => sum + lineTotalPaise(line.unitPricePaise, line.quantity), 0);
 }
 
-export function amountToFreeDelivery(subtotal: number): number {
-  return Math.max(0, homepageContent.freeDeliveryThresholdPaise - subtotal);
+export function amountToFreeDelivery(subtotal: number, thresholdPaise = 99900): number {
+  return Math.max(0, thresholdPaise - subtotal);
 }
 
 export function cartCount(lines: CartLine[]): number {

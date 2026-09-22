@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { LayoutDashboard, Package, ShoppingCart, Users } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingCart, Users, Palette } from "lucide-react";
 import { getAuthUser, getStaffSession } from "@/lib/auth/staff";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 
@@ -9,6 +9,7 @@ const nav = [
   { href: "/admin/orders", label: "Orders", icon: ShoppingCart },
   { href: "/admin/products", label: "Catalog", icon: Package },
   { href: "/admin/customers", label: "Customers", icon: Users },
+  { href: "/admin/appearance", label: "Website", icon: Palette },
 ];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {

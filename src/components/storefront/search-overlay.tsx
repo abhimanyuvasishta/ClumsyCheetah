@@ -5,13 +5,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Search, X } from "lucide-react";
 import { useCart } from "@/components/storefront/cart-provider";
-import { homepageContent } from "@/data/homepage";
+import { useStorefrontConfig } from "@/components/storefront/storefront-config-provider";
 import type { CatalogProduct } from "@/types/catalog";
 
 const RECENT_KEY = "cc-recent-searches";
 
 export function SearchOverlay({ products }: { products: CatalogProduct[] }) {
   const { searchOpen, setSearchOpen } = useCart();
+  const { chrome } = useStorefrontConfig();
   const router = useRouter();
   const [q, setQ] = useState("");
   const [recent, setRecent] = useState<string[]>([]);
@@ -78,7 +79,7 @@ export function SearchOverlay({ products }: { products: CatalogProduct[] }) {
           <div>
             <p className="eyebrow">Popular</p>
             <div className="mt-3 flex flex-wrap gap-2">
-              {homepageContent.popularSearches.map((term) => (
+              {chrome.popularSearches.map((term) => (
                 <button
                   key={term}
                   type="button"

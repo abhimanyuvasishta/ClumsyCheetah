@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Price } from "@/components/storefront/price";
 import { EmptyState } from "@/components/storefront/empty-state";
 import { useCart } from "@/components/storefront/cart-provider";
+import { useStorefrontConfig } from "@/components/storefront/storefront-config-provider";
 import { amountToFreeDelivery } from "@/lib/commerce/cart";
 import { formatInr } from "@/lib/money";
 import { buttonVariants } from "@/components/ui/button";
@@ -12,17 +13,18 @@ import { cn } from "@/lib/utils";
 
 export default function CartPage() {
   const { lines, subtotal, setQuantity, remove } = useCart();
-  const remaining = amountToFreeDelivery(subtotal);
+  const { chrome, pages } = useStorefrontConfig();
+  const remaining = amountToFreeDelivery(subtotal, chrome.freeDeliveryThresholdPaise);
 
   if (!lines.length) {
     return (
       <div className="store-wrap py-16">
-        <h1 className="font-heading text-4xl">Your bag</h1>
+        <h1 className="font-heading text-4xl">{pages.cart.heading}</h1>
         <EmptyState
           className="mt-8"
-          title="Your cart is feeling a little lonely."
-          description="A cookie box usually fixes this."
-          action={{ href: "/shop", label: "Shop the good stuff" }}
+          title={pages.cart.emptyTitle}
+          description={pages.cart.emptyBody}
+          action={{ href: "/shop", label: pages.cart.emptyCta }}
         />
       </div>
     );
@@ -31,7 +33,7 @@ export default function CartPage() {
   return (
     <div className="store-wrap grid gap-10 py-10 lg:grid-cols-[1fr_20rem]">
       <div>
-        <h1 className="font-heading text-4xl">Your bag</h1>
+        <h1 className="font-heading text-4xl">{pages.cart.heading}</h1>
         <ul className="mt-8 divide-y">
           {lines.map((line) => (
             <li key={line.variantId} className="flex gap-4 py-5">

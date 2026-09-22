@@ -7,6 +7,7 @@ import { LoginForm } from "./login-form";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getAuthUser } from "@/lib/auth/staff";
+import { getStorefrontConfig } from "@/lib/storefront/queries";
 
 export const metadata: Metadata = { title: "Login" };
 export const dynamic = "force-dynamic";
@@ -23,13 +24,14 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   if (user) {
     redirect(next);
   }
+  const { pages } = await getStorefrontConfig();
 
   return (
     <div className="mx-auto grid min-h-[70vh] max-w-5xl items-center gap-10 px-4 py-12 lg:grid-cols-2">
       <div>
-        <p className="eyebrow">Welcome back</p>
-        <h1 className="mt-3 font-heading text-4xl md:text-5xl">The usual table?</h1>
-        <p className="mt-3 text-muted-foreground">We’ll remember your bag, your pins, and the cake you always mean to reorder.</p>
+        <p className="eyebrow">{pages.login.eyebrow ?? "Welcome back"}</p>
+        <h1 className="mt-3 font-heading text-4xl md:text-5xl">{pages.login.heading}</h1>
+        <p className="mt-3 text-muted-foreground">{pages.login.body}</p>
       </div>
       <div className="rounded-[1.2rem] border bg-surface p-6 md:p-8">
         <BrandMark className="mb-6" />

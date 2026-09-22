@@ -5,6 +5,7 @@ import { ShopFilters } from "@/components/storefront/shop-filters";
 import { EmptyState } from "@/components/storefront/empty-state";
 import { Breadcrumbs } from "@/components/storefront/breadcrumbs";
 import { listCategories, listProducts } from "@/lib/catalog/queries";
+import { getStorefrontConfig } from "@/lib/storefront/queries";
 import type { ShopFilters as Filters } from "@/types/catalog";
 
 export const metadata: Metadata = {
@@ -28,18 +29,16 @@ export default async function ShopPage({
     bestseller: sp.bestseller === "1",
     newArrival: sp.new === "1",
   };
-  const [products, categories] = await Promise.all([listProducts(filters), listCategories()]);
+  const [products, categories, appearance] = await Promise.all([listProducts(filters), listCategories(), getStorefrontConfig()]);
 
   return (
     <div className="store-wrap py-10">
       <Breadcrumbs items={[{ href: "/", label: "Home" }, { label: "Shop" }]} />
       <h1 className="mt-4 font-heading text-4xl sm:text-5xl">
-        {sp.q ? `Results for “${sp.q}”` : "All the good stuff."}
+        {sp.q ? `Results for “${sp.q}”` : appearance.pages.shop.heading}
       </h1>
       <p className="mt-2 max-w-xl text-muted-foreground">
-        {sp.q
-          ? `Results for “${sp.q}”.`
-          : "Cakes, brownies, cookies and the hamper you actually want to give."}
+        {sp.q ? `Results for “${sp.q}”.` : appearance.pages.shop.body}
       </p>
       <Suspense>
         <ShopFilters categories={categories.map((c) => ({ slug: c.slug, name: c.name }))} />

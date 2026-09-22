@@ -1,45 +1,43 @@
+"use client";
+
 import Link from "next/link";
 import { BrandMark } from "@/components/storefront/brand-mark";
-import { homepageContent } from "@/data/homepage";
+import { useStorefrontConfig } from "@/components/storefront/storefront-config-provider";
 
 export function StoreFooter() {
+  const { chrome, layout, home } = useStorefrontConfig();
+
   return (
     <footer className="mt-auto border-t border-sky/20 bg-navy text-cream">
       <div className="store-wrap grid gap-10 py-16 sm:grid-cols-2 lg:grid-cols-5">
         <div className="lg:col-span-2">
           <BrandMark onDark size="lg" />
-          <p className="mt-4 max-w-sm text-sm text-cream/75">
-            A Bandra bakery that takes pastry seriously and itself only slightly less so.
-          </p>
-          <form className="mt-6 flex max-w-sm gap-2">
-            <label className="sr-only" htmlFor="footer-email">
-              Email
-            </label>
-            <input
-              id="footer-email"
-              type="email"
-              required
-              placeholder="Email"
-              className="h-11 flex-1 rounded-full border border-white/20 bg-white/5 px-4 text-sm"
-            />
-            <button type="submit" className="h-11 rounded-full bg-gold px-4 text-sm text-espresso">
-              Join
-            </button>
-          </form>
+          <p className="mt-4 max-w-sm text-sm text-cream/75">{chrome.footerBlurb}</p>
+          {layout.showFooterNewsletter ? (
+            <form className="mt-6 flex max-w-sm gap-2">
+              <label className="sr-only" htmlFor="footer-email">
+                Email
+              </label>
+              <input
+                id="footer-email"
+                type="email"
+                required
+                placeholder="Email"
+                className="h-11 flex-1 rounded-full border border-white/20 bg-white/5 px-4 text-sm"
+              />
+              <button type="submit" className="h-11 rounded-full bg-gold px-4 text-sm text-espresso">
+                Join
+              </button>
+            </form>
+          ) : null}
         </div>
         <div>
           <p className="eyebrow text-sky">Shop</p>
           <ul className="mt-3 space-y-2 text-sm">
-            {[
-              ["Cakes", "/collections/cakes"],
-              ["Brownies", "/collections/brownies"],
-              ["Cookies", "/collections/cookies"],
-              ["Desserts", "/collections/desserts"],
-              ["Gifting", "/collections/gift-hampers"],
-            ].map(([label, href]) => (
-              <li key={href}>
-                <Link href={href} className="hover:underline">
-                  {label}
+            {chrome.footerShop.map((item) => (
+              <li key={item.href}>
+                <Link href={item.href} className="hover:underline">
+                  {item.label}
                 </Link>
               </li>
             ))}
@@ -62,7 +60,7 @@ export function StoreFooter() {
             <li><Link href="/terms" className="hover:underline">Terms</Link></li>
             <li><Link href="/privacy" className="hover:underline">Privacy</Link></li>
             <li>
-              <a href={homepageContent.social.cta.href} className="hover:underline">
+              <a href={chrome.instagramUrl || home.social.cta.href} className="hover:underline">
                 Instagram
               </a>
             </li>

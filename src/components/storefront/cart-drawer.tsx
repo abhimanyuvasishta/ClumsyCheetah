@@ -6,6 +6,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { buttonVariants } from "@/components/ui/button";
 import { Price } from "@/components/storefront/price";
 import { useCart } from "@/components/storefront/cart-provider";
+import { useStorefrontConfig } from "@/components/storefront/storefront-config-provider";
 import { amountToFreeDelivery } from "@/lib/commerce/cart";
 import { formatInr } from "@/lib/money";
 import { cn } from "@/lib/utils";
@@ -13,20 +14,21 @@ import type { CatalogProduct } from "@/types/catalog";
 
 export function CartDrawer({ upsells = [] }: { upsells?: CatalogProduct[] }) {
   const { lines, subtotal, drawerOpen, setDrawerOpen, setQuantity, remove } = useCart();
-  const remaining = amountToFreeDelivery(subtotal);
+  const { chrome, pages } = useStorefrontConfig();
+  const remaining = amountToFreeDelivery(subtotal, chrome.freeDeliveryThresholdPaise);
 
   return (
     <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
       <SheetContent side="right" className="flex w-full flex-col bg-background p-0 sm:max-w-md">
         <SheetHeader className="border-b">
-          <SheetTitle className="font-heading text-2xl">Your bag</SheetTitle>
+          <SheetTitle className="font-heading text-2xl">{pages.cart.heading}</SheetTitle>
         </SheetHeader>
         {lines.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
-            <p className="font-heading text-2xl">Your cart is feeling a little lonely.</p>
-            <p className="mt-2 text-sm text-muted-foreground">A brownie usually helps.</p>
+            <p className="font-heading text-2xl">{pages.cart.emptyTitle}</p>
+            <p className="mt-2 text-sm text-muted-foreground">{pages.cart.emptyBody}</p>
             <Link href="/shop" onClick={() => setDrawerOpen(false)} className={cn(buttonVariants(), "mt-6 rounded-full")}>
-              Shop the good stuff
+              {pages.cart.emptyCta}
             </Link>
           </div>
         ) : (

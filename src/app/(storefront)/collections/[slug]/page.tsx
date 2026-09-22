@@ -5,15 +5,16 @@ import { ProductGrid } from "@/components/storefront/product-grid";
 import { EmptyState } from "@/components/storefront/empty-state";
 import { Breadcrumbs } from "@/components/storefront/breadcrumbs";
 import { categoryHeroCopy } from "@/data/homepage";
+import { getStorefrontConfig } from "@/lib/storefront/queries";
 import { listCategories, listCollections, listProductsByCollection } from "@/lib/catalog/queries";
 
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const [cats, cols] = await Promise.all([listCategories(), listCollections()]);
+  const [cats, cols, appearance] = await Promise.all([listCategories(), listCollections(), getStorefrontConfig()]);
   const named = [...cats, ...cols].find((c) => c.slug === slug);
-  const hero = categoryHeroCopy[slug];
+  const hero = appearance.collections[slug] ?? categoryHeroCopy[slug];
   return {
     title: named?.name ?? "Collection",
     description: hero?.body ?? named?.description ?? undefined,
@@ -23,20 +24,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function CollectionPage({ params }: Props) {
   const { slug } = await params;
-  const [cats, cols, products] = await Promise.all([
+  const [cats, cols, products, appearance] = await Promise.all([
     listCategories(),
     listCollections(),
     listProductsByCollection(slug),
+    getStorefrontConfig(),
   ]);
   const named = [...cats, ...cols].find((c) => c.slug === slug);
-  const hero = categoryHeroCopy[slug];
+  const hero = appearance.collections[slug] ?? categoryHeroCopy[slug];
   const image = named && "imageUrl" in named ? named.imageUrl : null;
   const featured = products.filter((p) => p.isFeatured || p.isBestseller).slice(0, 4);
   const related = cols.filter((c) => c.slug !== slug).slice(0, 4);
 
   return (
     <div>
-      <div className="relative min-h-[42vh] overflow-hidden bg-navy text-cream">
+      <div className={`relative min-h-[42vh] overflow-hidden ${appearance.layout.collectionHero === "cream" ? "bg-cream text-espresso" : "bg-navy text-cream"}`}>
         {image ? <Image src={image} alt="" fill className="object-cover opacity-45" priority /> : null}
         <div className="store-wrap relative py-16 md:py-24">
           <Breadcrumbs
@@ -48,7 +50,7 @@ export default async function CollectionPage({ params }: Props) {
             ]}
           />
           <h1 className="mt-6 max-w-2xl font-heading text-4xl md:text-6xl">{hero?.heading ?? named?.name ?? slug}</h1>
-          <p className="mt-4 max-w-xl text-cream/80">{hero?.body ?? named?.description}</p>
+          <p className={`mt-4 max-w-xl ${appearance.layout.collectionHero === "cream" ? "text-muted-foreground" : "text-cream/80"}`}>{hero?.body ?? named?.description}</p>
         </div>
       </div>
       <div className="store-wrap py-12">

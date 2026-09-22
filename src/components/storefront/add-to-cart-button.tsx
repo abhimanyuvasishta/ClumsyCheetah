@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/components/storefront/cart-provider";
+import { useStorefrontConfig } from "@/components/storefront/storefront-config-provider";
 import { startingPrice } from "@/lib/catalog/pricing";
 import { cn } from "@/lib/utils";
 import type { CatalogProduct, CatalogVariant } from "@/types/catalog";
@@ -12,7 +13,7 @@ export function AddToCartButton({
   variant,
   quantity = 1,
   className,
-  label = "Add to cart",
+  label,
 }: {
   product: CatalogProduct;
   variant?: CatalogVariant;
@@ -21,6 +22,8 @@ export function AddToCartButton({
   label?: string;
 }) {
   const { addItem } = useCart();
+  const configuredLabel = useStorefrontConfig().pages.product.addToCart;
+  const addLabel = label ?? configuredLabel;
   const [added, setAdded] = useState(false);
   const chosen = variant ?? startingPrice(product);
   if (!chosen) return null;
@@ -40,7 +43,7 @@ export function AddToCartButton({
       onClick={onClick}
       className={cn("min-h-10 w-full rounded-full", className)}
     >
-      {added ? "In the bag" : label}
+      {added ? "In the bag" : addLabel}
     </Button>
   );
 }

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Price } from "@/components/storefront/price";
 import { useCart } from "@/components/storefront/cart-provider";
+import { useStorefrontConfig } from "@/components/storefront/storefront-config-provider";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { placeCheckoutOrder } from "@/lib/checkout/place-order";
@@ -38,6 +39,7 @@ export function CheckoutForm({
 }) {
   const router = useRouter();
   const { lines, subtotal, clear } = useCart();
+  const { pages } = useStorefrontConfig();
   const [step, setStep] = useState(0);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -79,9 +81,9 @@ export function CheckoutForm({
   if (!lines.length) {
     return (
       <div className="mx-auto max-w-lg px-4 py-20 text-center">
-        <h1 className="font-heading text-3xl">Nothing to check out yet.</h1>
+        <h1 className="font-heading text-3xl">{pages.checkout.emptyTitle}</h1>
         <Link href="/shop" className={cn(buttonVariants(), "mt-6 inline-flex rounded-full")}>
-          Shop the good stuff
+          {pages.checkout.emptyCta}
         </Link>
       </div>
     );
