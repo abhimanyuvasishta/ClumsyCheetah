@@ -56,13 +56,29 @@ export async function sendOtpSms(phoneE164: string, otp: string): Promise<void> 
   if (!key) {
     throw new Error("TWO_FACTOR_API_KEY is not set on the server. Add it in Vercel and redeploy.");
   }
-  const template = stripQuotes(process.env.TWO_FACTOR_TEMPLATE ?? "");
-  const path = template
-    ? `https://2factor.in/API/V1/${encodeURIComponent(key)}/SMS/${mobile}/${encodeURIComponent(otp)}/${encodeURIComponent(template)}`
-    : `https://2factor.in/API/V1/${encodeURIComponent(key)}/SMS/${mobile}/${encodeURIComponent(otp)}`;
-  const response = await fetch(path);
-  const body = (await response.json().catch(() => null)) as { Status?: string; Details?: string } | null;
-  if (!response.ok || body?.Status !== "Success") {
-    throw new Error(body?.Details || "2Factor did not send the SMS");
+  const template = stripQuotes(process.env.TWO_FACTOR_TEMPLATE ?? "") || "OTP1";
+  const urls = [
+    `https://2factor.in/API/V1/${encodeURIComponent(key)}/SMS/${mobile}/${encodeURIComponent(otp)}/${encodeURIComponent(template)}`,
+    `https://2factor.in/API/V1/${encodeURIComponent(key)}/SMS/91${mobile}/${encodeURIComponent(otp)}/${encodeURIComponent(template)}`,
+  ];
+  let last = "2Factor did not send the SMS";
+  for (const path of urls) {
+    const response = await fetch(path);
+    const body = (await response.json().catch(() => null)) as { Status?: string; Details?: string } | null;
+    if (response.ok && body?.Status === "Success") return;
+    last = body?.Details || last;
   }
+  const v4 = await fetch("https://2factor.in/API/V1/OTP/SEND", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-API-Key": key },
+    body: JSON.stringify({
+      to: `+91${mobile}`,
+      channel: "SMS",
+      template_name: template,
+      var1: otp,
+    }),
+  });
+  const v4Body = (await v4.json().catch(() => null)) as { status?: string; Details?: string; message?: string } | null;
+  if (v4.ok && (v4Body?.status === "sent" || v4Body?.status === "Success")) return;
+  throw new Error(v4Body?.Details || v4Body?.message || last);
 }
