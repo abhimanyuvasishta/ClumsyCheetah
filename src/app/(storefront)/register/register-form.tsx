@@ -49,7 +49,7 @@ export function RegisterForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="mt-8 space-y-4">
+    <form onSubmit={onSubmit} className="space-y-4">
       <div>
         <Label htmlFor="name">Name</Label>
         <Input id="name" name="name" required autoComplete="name" className="mt-1 h-12 rounded-xl" />

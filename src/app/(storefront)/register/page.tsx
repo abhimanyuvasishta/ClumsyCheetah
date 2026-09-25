@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { BrandMark } from "@/components/storefront/brand-mark";
 import { RegisterForm } from "./register-form";
+import { SocialAuth } from "@/components/storefront/social-auth";
 import { getStorefrontConfig } from "@/lib/storefront/queries";
 
 export const metadata: Metadata = { title: "Create account" };
@@ -13,6 +14,10 @@ export default async function RegisterPage() {
       <BrandMark className="mb-8" />
       <p className="eyebrow">{pages.register.eyebrow ?? "Join the bakery"}</p>
       <h1 className="mt-2 font-heading text-4xl">{pages.register.heading}</h1>
+      <div className="mt-8">
+        <SocialAuth next="/account" />
+        <p className="my-4 text-center text-xs text-muted-foreground">or email</p>
+      </div>
       <RegisterForm />
       <p className="mt-4 text-xs text-muted-foreground">
         By continuing you agree to our{" "}

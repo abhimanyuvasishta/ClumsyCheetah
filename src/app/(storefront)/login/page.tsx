@@ -3,9 +3,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { BrandMark } from "@/components/storefront/brand-mark";
+import { SocialAuth } from "@/components/storefront/social-auth";
 import { LoginForm } from "./login-form";
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { getAuthUser } from "@/lib/auth/staff";
 import { getStorefrontConfig } from "@/lib/storefront/queries";
 
@@ -17,8 +16,8 @@ function safeNext(value: string | undefined) {
   return "/account";
 }
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
-  const { next: nextRaw } = await searchParams;
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string; error?: string }> }) {
+  const { next: nextRaw, error } = await searchParams;
   const next = safeNext(nextRaw);
   const user = await getAuthUser();
   if (user) {
@@ -35,14 +34,8 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       </div>
       <div className="rounded-[1.2rem] border bg-surface p-6 md:p-8">
         <BrandMark className="mb-6" />
-        <div className="space-y-2">
-          <button type="button" disabled className={cn(buttonVariants({ variant: "outline" }), "h-12 w-full rounded-full")}>
-            Continue with Google
-          </button>
-          <button type="button" disabled className={cn(buttonVariants({ variant: "outline" }), "h-12 w-full rounded-full")}>
-            Continue with phone
-          </button>
-        </div>
+        {error ? <p className="mb-4 text-sm text-destructive">{error}</p> : null}
+        <SocialAuth next={next} />
         <p className="my-4 text-center text-xs text-muted-foreground">or email</p>
         <Suspense>
           <LoginForm />
@@ -53,7 +46,6 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
             Create an account
           </Link>
         </p>
-        <p className="mt-3 text-center text-xs text-muted-foreground">Google and phone OTP land when Auth providers are enabled. Email works today.</p>
       </div>
     </div>
   );
