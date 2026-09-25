@@ -73,7 +73,7 @@ export async function requestPhoneOtp(phone: string): Promise<LoginState> {
   }
   const { error } = await supabase.auth.signInWithOtp({
     phone: e164,
-    options: { shouldCreateUser: true },
+    options: { shouldCreateUser: true, channel: "sms" },
   });
   if (error) {
     return { error: error.message };
@@ -94,13 +94,16 @@ export async function verifyPhoneOtp(phone: string, token: string): Promise<Logi
   if (!supabase) {
     return { error: "Could not start a Supabase client." };
   }
-  const { error } = await supabase.auth.verifyOtp({
+  const { data, error } = await supabase.auth.verifyOtp({
     phone: e164,
     token: code,
     type: "sms",
   });
   if (error) {
     return { error: error.message };
+  }
+  if (data.user) {
+    await supabase.from("profiles").update({ phone: e164 }).eq("id", data.user.id);
   }
   return { success: true };
 }
