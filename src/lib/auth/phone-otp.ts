@@ -1,3 +1,4 @@
+import { randomInt } from "node:crypto";
 import { indianMobileFromE164 } from "@/lib/auth/sms";
 import { toE164Phone } from "@/lib/auth/phone";
 import { createServiceRoleClient } from "@/lib/supabase/service";
@@ -19,8 +20,15 @@ function twoFactorKey(): string {
   return key;
 }
 
-function templateName(): string {
-  return stripQuotes(process.env.TWO_FACTOR_TEMPLATE ?? "") || "one";
+function templateNames(): string[] {
+  const env = stripQuotes(process.env.TWO_FACTOR_TEMPLATE ?? "");
+  // Template "one" + AUTOGEN was delivering a voice call. Prefer "two".
+  const names = env && env !== "one" ? [env, "two", "one"] : ["two", "one"];
+  return [...new Set(names)];
+}
+
+function generateOtp(): string {
+  return String(randomInt(100000, 1_000_000));
 }
 
 type FactorJson = {
@@ -47,7 +55,7 @@ async function factorGet(path: string): Promise<FactorJson> {
   return ((await response.json().catch(() => null)) ?? {}) as FactorJson;
 }
 
-/** DLT SMS only — never bare AUTOGEN, which 2Factor logs as SMS but delivers as a voice call. */
+/** Custom OTP + named SMS template. AUTOGEN on this 2Factor account places a voice call. */
 export async function sendTwoFactorAutogen(phoneRaw: string): Promise<{ sessionId: string } | { error: string }> {
   const e164 = toE164Phone(phoneRaw);
   const mobile = e164 ? indianMobileFromE164(e164) : null;
@@ -58,37 +66,43 @@ export async function sendTwoFactorAutogen(phoneRaw: string): Promise<{ sessionI
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Missing 2Factor key" };
   }
-  const template = templateName();
+  const otp = generateOtp();
   const encodedKey = encodeURIComponent(key);
-  const encodedTemplate = encodeURIComponent(template);
-  const urls = [
-    `https://2factor.in/API/V1/${encodedKey}/SMS/+91${mobile}/AUTOGEN/${encodedTemplate}`,
-    `https://2factor.in/API/V1/${encodedKey}/SMS/${mobile}/AUTOGEN/${encodedTemplate}`,
-  ];
-  let last = "2Factor could not send an SMS with template “one”.";
-  for (const url of urls) {
-    const body = await factorGet(url);
-    const sessionId = body.Status === "Success" ? sessionIdFrom(body) : null;
-    if (sessionId) return { sessionId };
-    last = body.Details || body.message || last;
-  }
+  const encodedOtp = encodeURIComponent(otp);
+  let last = "2Factor could not send SMS with template “two”.";
+  for (const template of templateNames()) {
+    const encodedTemplate = encodeURIComponent(template);
+    const urls = [
+      `https://2factor.in/API/V1/${encodedKey}/SMS/+91${mobile}/${encodedOtp}/${encodedTemplate}`,
+      `https://2factor.in/API/V1/${encodedKey}/SMS/${mobile}/${encodedOtp}/${encodedTemplate}`,
+    ];
+    for (const url of urls) {
+      const body = await factorGet(url);
+      const sessionId = body.Status === "Success" ? sessionIdFrom(body) : null;
+      if (sessionId) return { sessionId };
+      last = body.Details || body.message || last;
+    }
 
-  const v4 = await fetch("https://2factor.in/API/V1/OTP/SEND", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "X-API-Key": key },
-    body: JSON.stringify({
-      to: `+91${mobile}`,
-      channel: "sms",
-      template: template,
-      template_name: template,
-    }),
-  });
-  const v4Body = ((await v4.json().catch(() => null)) ?? {}) as FactorJson;
-  const v4Session = sessionIdFrom(v4Body);
-  if (v4Session && (v4.ok || v4Body.Status === "Success" || v4Body.status === "sent" || v4Body.status === "Success")) {
-    return { sessionId: v4Session };
+    const v4 = await fetch("https://2factor.in/API/V1/OTP/SEND", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-API-Key": key },
+      body: JSON.stringify({
+        to: `+91${mobile}`,
+        channel: "sms",
+        template: template,
+        template_name: template,
+        var1: otp,
+        otp,
+      }),
+    });
+    const v4Body = ((await v4.json().catch(() => null)) ?? {}) as FactorJson;
+    const v4Session = sessionIdFrom(v4Body);
+    if (v4Session && (v4.ok || v4Body.Status === "Success" || v4Body.status === "sent" || v4Body.status === "Success")) {
+      return { sessionId: v4Session };
+    }
+    last = v4Body.Details || v4Body.message || last;
   }
-  return { error: v4Body.Details || v4Body.message || last };
+  return { error: last };
 }
 
 export async function verifyTwoFactorAndSession(
