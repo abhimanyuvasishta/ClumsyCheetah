@@ -23,14 +23,31 @@ function templateName(): string {
   return stripQuotes(process.env.TWO_FACTOR_TEMPLATE ?? "") || "one";
 }
 
-type FactorJson = { Status?: string; Details?: string; status?: string; message?: string };
+type FactorJson = {
+  Status?: string;
+  Details?: string;
+  status?: string;
+  message?: string;
+  session_id?: string;
+  sessionId?: string;
+};
+
+function sessionIdFrom(body: FactorJson): string | null {
+  const candidates = [body.session_id, body.sessionId, body.Details];
+  for (const value of candidates) {
+    if (typeof value === "string" && /[a-zA-Z0-9-]{8,}/.test(value) && !/otp matched|invalid|error/i.test(value)) {
+      return value;
+    }
+  }
+  return null;
+}
 
 async function factorGet(path: string): Promise<FactorJson> {
   const response = await fetch(path);
   return ((await response.json().catch(() => null)) ?? {}) as FactorJson;
 }
 
-/** 2Factor AUTOGEN actually delivers on Indian DLT templates. Custom OTP often only logs in the portal. */
+/** DLT SMS only — never bare AUTOGEN, which 2Factor logs as SMS but delivers as a voice call. */
 export async function sendTwoFactorAutogen(phoneRaw: string): Promise<{ sessionId: string } | { error: string }> {
   const e164 = toE164Phone(phoneRaw);
   const mobile = e164 ? indianMobileFromE164(e164) : null;
@@ -41,21 +58,37 @@ export async function sendTwoFactorAutogen(phoneRaw: string): Promise<{ sessionI
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Missing 2Factor key" };
   }
-  const template = encodeURIComponent(templateName());
+  const template = templateName();
+  const encodedKey = encodeURIComponent(key);
+  const encodedTemplate = encodeURIComponent(template);
   const urls = [
-    `https://2factor.in/API/V1/${encodeURIComponent(key)}/SMS/${mobile}/AUTOGEN/${template}`,
-    `https://2factor.in/API/V1/${encodeURIComponent(key)}/SMS/91${mobile}/AUTOGEN/${template}`,
-    `https://2factor.in/API/V1/${encodeURIComponent(key)}/SMS/${mobile}/AUTOGEN`,
+    `https://2factor.in/API/V1/${encodedKey}/SMS/+91${mobile}/AUTOGEN/${encodedTemplate}`,
+    `https://2factor.in/API/V1/${encodedKey}/SMS/${mobile}/AUTOGEN/${encodedTemplate}`,
   ];
-  let last = "2Factor could not send the SMS. Check that the template named “one” is approved for live sending.";
+  let last = "2Factor could not send an SMS with template “one”.";
   for (const url of urls) {
     const body = await factorGet(url);
-    if (body.Status === "Success" && body.Details) {
-      return { sessionId: body.Details };
-    }
+    const sessionId = body.Status === "Success" ? sessionIdFrom(body) : null;
+    if (sessionId) return { sessionId };
     last = body.Details || body.message || last;
   }
-  return { error: last };
+
+  const v4 = await fetch("https://2factor.in/API/V1/OTP/SEND", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-API-Key": key },
+    body: JSON.stringify({
+      to: `+91${mobile}`,
+      channel: "sms",
+      template: template,
+      template_name: template,
+    }),
+  });
+  const v4Body = ((await v4.json().catch(() => null)) ?? {}) as FactorJson;
+  const v4Session = sessionIdFrom(v4Body);
+  if (v4Session && (v4.ok || v4Body.Status === "Success" || v4Body.status === "sent" || v4Body.status === "Success")) {
+    return { sessionId: v4Session };
+  }
+  return { error: v4Body.Details || v4Body.message || last };
 }
 
 export async function verifyTwoFactorAndSession(
