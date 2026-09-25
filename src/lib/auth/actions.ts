@@ -1,13 +1,45 @@
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { toE164Phone } from "@/lib/auth/phone";
+import { AUTH_NEXT_COOKIE } from "@/lib/auth/errors";
 
-export type LoginState = { error?: string; success?: boolean; needsEmailConfirm?: boolean };
+export type LoginState = { error?: string; success?: boolean; needsEmailConfirm?: boolean; url?: string };
 
-function authRedirect(next = "/account") {
-  const origin = typeof window !== "undefined" ? window.location.origin : process.env.NEXT_PUBLIC_APP_URL;
-  const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "/account";
-  return origin ? `${origin}/auth/callback?next=${encodeURIComponent(safeNext)}` : undefined;
+function siteOrigin() {
+  if (typeof window !== "undefined") return window.location.origin;
+  return process.env.NEXT_PUBLIC_APP_URL ?? "";
+}
+
+export function rememberAuthNext(next: string) {
+  if (typeof document === "undefined") return;
+  const safe = next.startsWith("/") && !next.startsWith("//") ? next : "/account";
+  document.cookie = `${AUTH_NEXT_COOKIE}=${encodeURIComponent(safe)}; Path=/; Max-Age=600; SameSite=Lax`;
+}
+
+export async function signInWithGoogle(next = "/account"): Promise<LoginState> {
+  if (!isSupabaseConfigured()) {
+    return { error: "Supabase is not configured." };
+  }
+  const supabase = createBrowserSupabaseClient();
+  if (!supabase) {
+    return { error: "Could not start a Supabase client." };
+  }
+  rememberAuthNext(next);
+  const origin = siteOrigin();
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: origin ? `${origin}/auth/callback` : undefined,
+      skipBrowserRedirect: true,
+    },
+  });
+  if (error) {
+    return { error: error.message };
+  }
+  if (!data.url) {
+    return { error: "Google did not return a sign-in URL." };
+  }
+  return { success: true, url: data.url };
 }
 
 export async function signInWithPassword(email: string, password: string): Promise<LoginState> {
@@ -21,27 +53,6 @@ export async function signInWithPassword(email: string, password: string): Promi
     return { error: "Could not start a Supabase client." };
   }
   const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) {
-    return { error: error.message };
-  }
-  return { success: true };
-}
-
-export async function signInWithGoogle(next = "/account"): Promise<LoginState> {
-  if (!isSupabaseConfigured()) {
-    return { error: "Supabase is not configured." };
-  }
-  const supabase = createBrowserSupabaseClient();
-  if (!supabase) {
-    return { error: "Could not start a Supabase client." };
-  }
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
-    options: {
-      redirectTo: authRedirect(next),
-      queryParams: { access_type: "offline", prompt: "select_account" },
-    },
-  });
   if (error) {
     return { error: error.message };
   }

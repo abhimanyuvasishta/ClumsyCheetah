@@ -7,6 +7,7 @@ import { SocialAuth } from "@/components/storefront/social-auth";
 import { LoginForm } from "./login-form";
 import { getAuthUser } from "@/lib/auth/staff";
 import { getStorefrontConfig } from "@/lib/storefront/queries";
+import { authErrorMessage } from "@/lib/auth/errors";
 
 export const metadata: Metadata = { title: "Login" };
 export const dynamic = "force-dynamic";
@@ -34,7 +35,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       </div>
       <div className="rounded-[1.2rem] border bg-surface p-6 md:p-8">
         <BrandMark className="mb-6" />
-        {error ? <p className="mb-4 text-sm text-destructive">{error}</p> : null}
+        {error ? <p className="mb-4 text-sm text-destructive">{authErrorMessage(error)}</p> : null}
         <SocialAuth next={next} />
         <p className="my-4 text-center text-xs text-muted-foreground">or email</p>
         <Suspense>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { requestPhoneOtp, signInWithGoogle, verifyPhoneOtp } from "@/lib/auth/actions";
+import { authErrorMessage } from "@/lib/auth/errors";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -21,7 +22,11 @@ export function SocialAuth({ next = "/account" }: { next?: string }) {
     const result = await signInWithGoogle(next);
     if (result.error) {
       setPending(null);
-      setError(result.error);
+      setError(authErrorMessage(result.error));
+      return;
+    }
+    if (result.url) {
+      window.location.assign(result.url);
     }
   }
 
