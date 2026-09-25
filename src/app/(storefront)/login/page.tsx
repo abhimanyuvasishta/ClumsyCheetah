@@ -36,6 +36,9 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       <div className="rounded-[1.2rem] border bg-surface p-6 md:p-8">
         <BrandMark className="mb-6" />
         {error ? <p className="mb-4 text-sm text-destructive">{authErrorMessage(error)}</p> : null}
+        {next === "/checkout" ? (
+          <p className="mb-4 text-sm text-muted-foreground">Sign in to place your order. We’ll keep your phone and address on your account.</p>
+        ) : null}
         <SocialAuth next={next} />
         <p className="my-4 text-center text-xs text-muted-foreground">or email</p>
         <Suspense>
@@ -43,7 +46,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         </Suspense>
         <p className="mt-6 text-center text-sm text-muted-foreground">
           New here?{" "}
-          <Link href="/register" className="underline">
+          <Link href={next === "/account" ? "/register" : `/register?next=${encodeURIComponent(next)}`} className="underline">
             Create an account
           </Link>
         </p>

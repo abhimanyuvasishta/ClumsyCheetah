@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getAuthUser } from "@/lib/auth/staff";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { ProfileContactForm } from "@/components/storefront/profile-contact-form";
 
 export const metadata: Metadata = { title: "Profile" };
 export const dynamic = "force-dynamic";
@@ -30,6 +31,10 @@ export default async function AccountProfilePage() {
           <dd>{profile?.phone || "—"}</dd>
         </div>
       </dl>
+      {!profile?.phone ? (
+        <p className="mt-4 text-sm text-muted-foreground">Add a phone number so we can reach you about orders.</p>
+      ) : null}
+      <ProfileContactForm name={profile?.full_name ?? ""} phone={profile?.phone ?? ""} />
     </section>
   );
 }

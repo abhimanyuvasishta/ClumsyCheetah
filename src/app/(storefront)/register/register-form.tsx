@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { signUpWithPassword } from "@/lib/auth/actions";
 
-export function RegisterForm() {
+export function RegisterForm({ next = "/account" }: { next?: string }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
@@ -44,7 +44,7 @@ export function RegisterForm() {
       setInfo("Check your email and confirm the link, then sign in.");
       return;
     }
-    router.push("/account");
+    router.push(next.startsWith("/") && !next.startsWith("//") ? next : "/account");
     router.refresh();
   }
 

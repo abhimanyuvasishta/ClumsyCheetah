@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { CheckoutForm } from "@/components/storefront/checkout-form";
 import { getAuthUser } from "@/lib/auth/staff";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -8,9 +9,16 @@ export const dynamic = "force-dynamic";
 
 export default async function CheckoutPage() {
   const user = await getAuthUser();
+  if (!user) {
+    redirect("/login?next=/checkout");
+  }
   const supabase = await createServerSupabaseClient();
 
-  let account = null;
+  let account = {
+    email: user.email ?? "",
+    name: "",
+    phone: "",
+  };
   let savedAddresses: {
     id: string;
     label: string | null;
@@ -25,7 +33,7 @@ export default async function CheckoutPage() {
     is_default: boolean;
   }[] = [];
 
-  if (user && supabase) {
+  if (supabase) {
     const [{ data: profile }, { data: addresses }] = await Promise.all([
       supabase.from("profiles").select("full_name, phone").eq("id", user.userId).maybeSingle(),
       supabase

@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { placeCheckoutOrder } from "@/lib/checkout/place-order";
 import { buildUpiPayUrl, upiQrImageSrc } from "@/lib/checkout/upi";
 import { saveAddress, type SavedAddress } from "@/app/(storefront)/account/addresses/actions";
+import { updateProfileContact } from "@/app/(storefront)/account/profile-actions";
 import { previewCoupon, type CouponPreview } from "@/app/admin/offers/actions";
 import { CartCoupon } from "@/components/storefront/cart-coupon";
 import { readStoredCoupon, writeStoredCoupon } from "@/components/storefront/shop-commerce";
@@ -37,7 +38,7 @@ export function CheckoutForm({
   account,
   savedAddresses,
 }: {
-  account: CheckoutAccount | null;
+  account: CheckoutAccount;
   savedAddresses: SavedAddress[];
 }) {
   const router = useRouter();
@@ -47,16 +48,16 @@ export function CheckoutForm({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [method] = useState<"UPI">("UPI");
-  const [forMe, setForMe] = useState(Boolean(account));
+  const [forMe, setForMe] = useState(true);
   const [contact, setContact] = useState({
-    name: account?.name ?? "",
-    email: account?.email ?? "",
-    phone: account?.phone ?? "",
+    name: account.name,
+    email: account.email,
+    phone: account.phone,
   });
   const [addressId, setAddressId] = useState(
     savedAddresses.find((a) => a.is_default)?.id ?? savedAddresses[0]?.id ?? "",
   );
-  const [adding, setAdding] = useState(!account || savedAddresses.length === 0);
+  const [adding, setAdding] = useState(savedAddresses.length === 0);
   const [addresses, setAddresses] = useState(savedAddresses);
   const [delivery, setDelivery] = useState({
     line1: "",
@@ -135,13 +136,28 @@ export function CheckoutForm({
     router.push(`/checkout/success?order=${encodeURIComponent(result.orderNumber)}&pay=${method}`);
   }
 
-  async function onAddAddress(e: React.FormEvent<HTMLFormElement>) {
+  async function onContact(e: React.FormEvent) {
     e.preventDefault();
-    if (!account) {
-      setAdding(false);
-      setStep(2);
+    if (!contact.name.trim() || !contact.phone.trim()) {
+      setError("Add your name and phone number");
       return;
     }
+    setPending(true);
+    setError(null);
+    const result = await updateProfileContact({
+      name: account.name.trim() || contact.name,
+      phone: account.phone.trim() || contact.phone,
+    });
+    setPending(false);
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
+    setStep(1);
+  }
+
+  async function onAddAddress(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     setSavePending(true);
     setError(null);
     const form = new FormData(e.currentTarget);
@@ -171,16 +187,14 @@ export function CheckoutForm({
           ))}
         </ol>
         {step === 0 ? (
-          <form
-            className="space-y-4"
-            onSubmit={(e) => {
-              e.preventDefault();
-              setStep(1);
-            }}
-          >
+          <form className="space-y-4" onSubmit={(e) => void onContact(e)}>
             <h1 className="font-heading text-3xl">Who’s receiving this?</h1>
-            {account ? (
-              <div className="space-y-3">
+            {(!account.phone || addresses.length === 0) ? (
+              <p className="text-sm text-muted-foreground">
+                We’ll save your phone and delivery address to your account so the next order is quicker.
+              </p>
+            ) : null}
+            <div className="space-y-3">
                 <label className="flex min-h-12 items-center gap-3 rounded-xl border px-4">
                   <input
                     type="radio"
@@ -188,7 +202,7 @@ export function CheckoutForm({
                     checked={forMe}
                     onChange={() => {
                       setForMe(true);
-                      if (account) setContact({ name: account.name, email: account.email, phone: account.phone });
+                      setContact({ name: account.name, email: account.email, phone: account.phone || contact.phone });
                     }}
                   />
                   For me ({account.name || account.email})
@@ -200,28 +214,21 @@ export function CheckoutForm({
                     checked={!forMe}
                     onChange={() => {
                       setForMe(false);
-                      setContact({ name: "", email: account.email, phone: "" });
+                      setContact({ name: "", email: account.email, phone: account.phone });
                     }}
                   />
                   For someone else
                 </label>
-              </div>
-            ) : null}
-            {(!account || !forMe) && (
-              <>
-                <input required name="name" placeholder="Name" value={contact.name} onChange={(e) => setContact({ ...contact, name: e.target.value })} className="h-12 w-full rounded-xl border px-4" />
-                <input required type="email" name="email" placeholder="Email" value={contact.email} onChange={(e) => setContact({ ...contact, email: e.target.value })} className="h-12 w-full rounded-xl border px-4" />
-                <input required name="phone" placeholder="Phone" value={contact.phone} onChange={(e) => setContact({ ...contact, phone: e.target.value })} className="h-12 w-full rounded-xl border px-4" />
-              </>
+            </div>
+            {(!forMe || !account.name) && (
+              <input required name="name" placeholder="Name" value={contact.name} onChange={(e) => setContact({ ...contact, name: e.target.value })} className="h-12 w-full rounded-xl border px-4" />
             )}
-            {account && forMe && !account.name ? (
-              <input required name="name" placeholder="Your name" value={contact.name} onChange={(e) => setContact({ ...contact, name: e.target.value })} className="h-12 w-full rounded-xl border px-4" />
-            ) : null}
-            {account && forMe && !account.phone ? (
-              <input required name="phone" placeholder="Your phone" value={contact.phone} onChange={(e) => setContact({ ...contact, phone: e.target.value })} className="h-12 w-full rounded-xl border px-4" />
-            ) : null}
-            <button type="submit" className={cn(buttonVariants(), "h-12 w-full rounded-full")}>
-              Continue to delivery
+            {(!forMe || !account.phone) && (
+              <input required name="phone" placeholder="Phone" value={contact.phone} onChange={(e) => setContact({ ...contact, phone: e.target.value })} className="h-12 w-full rounded-xl border px-4" />
+            )}
+            {error ? <p className="text-sm text-destructive">{error}</p> : null}
+            <button type="submit" className={cn(buttonVariants(), "h-12 w-full rounded-full")} disabled={pending}>
+              {pending ? "Saving…" : "Continue to delivery"}
             </button>
           </form>
         ) : null}
@@ -285,19 +292,17 @@ export function CheckoutForm({
                 </button>
               </>
             ) : (
-              <form className="space-y-4" onSubmit={onAddAddress}>
-                {account ? (
+              <form className="space-y-4" onSubmit={(e) => void onAddAddress(e)}>
+                {addresses.length > 0 ? (
                   <button type="button" className="text-sm underline" onClick={() => setAdding(false)}>
                     Use a saved address
                   </button>
-                ) : null}
-                {account ? (
-                  <>
-                    <input name="label" placeholder="Label (Home)" className="h-12 w-full rounded-xl border px-4" />
-                    <input required name="full_name" placeholder="Name on doorbell" defaultValue={contact.name} className="h-12 w-full rounded-xl border px-4" />
-                    <input required name="phone" placeholder="Phone" defaultValue={contact.phone} className="h-12 w-full rounded-xl border px-4" />
-                  </>
-                ) : null}
+                ) : (
+                  <p className="text-sm text-muted-foreground">Add a delivery address. We’ll keep it on your account for next time.</p>
+                )}
+                <input name="label" placeholder="Label (Home)" className="h-12 w-full rounded-xl border px-4" />
+                <input required name="full_name" placeholder="Name on doorbell" defaultValue={contact.name} className="h-12 w-full rounded-xl border px-4" />
+                <input required name="phone" placeholder="Phone" defaultValue={contact.phone} className="h-12 w-full rounded-xl border px-4" />
                 <input
                   required
                   name="line1"
@@ -336,7 +341,7 @@ export function CheckoutForm({
                     className="h-12 rounded-xl border px-4"
                   />
                 </div>
-                {account ? <input type="hidden" name="state" value="Maharashtra" /> : null}
+                <input type="hidden" name="state" value="Maharashtra" />
                 <input
                   name="gstin"
                   placeholder="GSTIN (optional)"
@@ -351,14 +356,12 @@ export function CheckoutForm({
                   onChange={(e) => setDelivery({ ...delivery, notes: e.target.value })}
                   className="min-h-24 w-full rounded-xl border px-4 py-3"
                 />
-                {account ? (
-                  <label className="flex items-center gap-2 text-sm">
-                    <input type="checkbox" name="is_default" defaultChecked={!addresses.length} /> Save as default
-                  </label>
-                ) : null}
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" name="is_default" defaultChecked={!addresses.length} /> Save as default
+                </label>
                 {error ? <p className="text-sm text-destructive">{error}</p> : null}
                 <button type="submit" className={cn(buttonVariants(), "h-12 w-full rounded-full")} disabled={savePending}>
-                  {savePending ? "Saving…" : account ? "Save and continue" : "Continue to payment"}
+                  {savePending ? "Saving…" : "Save to account and continue"}
                 </button>
               </form>
             )}

@@ -6,6 +6,7 @@ import { lineTotalPaise } from "@/lib/money";
 import { quoteOffer } from "@/lib/offers/quote";
 import { offerLifecycle, type OfferRow } from "@/lib/offers/types";
 import { createServiceRoleClient } from "@/lib/supabase/service";
+import { saveAccountPhoneAndAddress } from "@/lib/checkout/save-account";
 
 export type CheckoutLineInput = { variantId: string; quantity: number };
 export type CheckoutPayload = {
@@ -213,6 +214,21 @@ export async function placeCheckoutOrder(payload: CheckoutPayload): Promise<Plac
 
   const total = Math.max(0, subtotal - discountPaise);
   const user = await getAuthUser();
+  if (!user) {
+    return { error: "Sign in to place an order so we can save your phone and address" };
+  }
+
+  const saved = await saveAccountPhoneAndAddress(db, user.userId, {
+    name,
+    phone,
+    line1,
+    landmark: payload.landmark.trim(),
+    city,
+    pincode,
+    notes: payload.notes.trim(),
+  });
+  if (saved.error) return { error: saved.error };
+
   const { data: location } = await db.from("locations").select("id").eq("is_active", true).limit(1).maybeSingle();
   const orderNumber = nextOrderNumber();
 
@@ -220,7 +236,7 @@ export async function placeCheckoutOrder(payload: CheckoutPayload): Promise<Plac
     .from("orders")
     .insert({
       order_number: orderNumber,
-      user_id: user?.userId ?? null,
+      user_id: user.userId,
       location_id: location?.id ?? null,
       status: "PLACED",
       contact_name: name,
@@ -283,7 +299,7 @@ export async function placeCheckoutOrder(payload: CheckoutPayload): Promise<Plac
     await db.from("offer_redemptions").insert({
       offer_id: appliedOffer.id,
       order_id: order.id,
-      user_id: user?.userId ?? null,
+      user_id: user.userId,
       discount_paise: discountPaise,
       gift_product_id: giftLine?.productId ?? null,
     });
@@ -294,7 +310,7 @@ export async function placeCheckoutOrder(payload: CheckoutPayload): Promise<Plac
     from_status: null,
     to_status: "PLACED",
     note: "Placed — UPI QR, confirm when paid",
-    changed_by: user?.userId ?? null,
+    changed_by: user.userId,
   });
 
   await db.from("payments").insert({
@@ -308,5 +324,7 @@ export async function placeCheckoutOrder(payload: CheckoutPayload): Promise<Plac
   revalidatePath("/admin/orders");
   revalidatePath("/admin/offers");
   revalidatePath("/account/orders");
+  revalidatePath("/account");
+  revalidatePath("/account/addresses");
   return { orderNumber, orderId: order.id, totalPaise: total };
 }
