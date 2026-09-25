@@ -49,6 +49,7 @@ export function CheckoutForm({
   const [error, setError] = useState<string | null>(null);
   const [method] = useState<"UPI">("UPI");
   const [forMe, setForMe] = useState(true);
+  const [savedProfile, setSavedProfile] = useState({ name: account.name, phone: account.phone });
   const [contact, setContact] = useState({
     name: account.name,
     email: account.email,
@@ -138,20 +139,23 @@ export function CheckoutForm({
 
   async function onContact(e: React.FormEvent) {
     e.preventDefault();
-    if (!contact.name.trim() || !contact.phone.trim()) {
+    const name = (forMe ? savedProfile.name || contact.name : contact.name).trim();
+    const phone = (forMe ? savedProfile.phone || contact.phone : contact.phone).trim();
+    if (!name || !phone) {
       setError("Add your name and phone number");
       return;
     }
-    setPending(true);
+    setContact((c) => ({ ...c, name, phone }));
     setError(null);
-    const result = await updateProfileContact({
-      name: account.name.trim() || contact.name,
-      phone: account.phone.trim() || contact.phone,
-    });
-    setPending(false);
-    if (result.error) {
-      setError(result.error);
-      return;
+    if (!savedProfile.phone.trim()) {
+      setPending(true);
+      const result = await updateProfileContact({ name, phone });
+      setPending(false);
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+      setSavedProfile({ name, phone });
     }
     setStep(1);
   }
@@ -189,11 +193,13 @@ export function CheckoutForm({
         {step === 0 ? (
           <form className="space-y-4" onSubmit={(e) => void onContact(e)}>
             <h1 className="font-heading text-3xl">Who’s receiving this?</h1>
-            {(!account.phone || addresses.length === 0) ? (
+            {!savedProfile.phone || addresses.length === 0 ? (
               <p className="text-sm text-muted-foreground">
                 We’ll save your phone and delivery address to your account so the next order is quicker.
               </p>
-            ) : null}
+            ) : (
+              <p className="text-sm text-muted-foreground">Using the phone and address on your account. You can change them below if this order is for someone else.</p>
+            )}
             <div className="space-y-3">
                 <label className="flex min-h-12 items-center gap-3 rounded-xl border px-4">
                   <input
@@ -202,10 +208,14 @@ export function CheckoutForm({
                     checked={forMe}
                     onChange={() => {
                       setForMe(true);
-                      setContact({ name: account.name, email: account.email, phone: account.phone || contact.phone });
+                      setContact({
+                        name: savedProfile.name,
+                        email: account.email,
+                        phone: savedProfile.phone || contact.phone,
+                      });
                     }}
                   />
-                  For me ({account.name || account.email})
+                  For me ({savedProfile.name || account.email})
                 </label>
                 <label className="flex min-h-12 items-center gap-3 rounded-xl border px-4">
                   <input
@@ -214,16 +224,16 @@ export function CheckoutForm({
                     checked={!forMe}
                     onChange={() => {
                       setForMe(false);
-                      setContact({ name: "", email: account.email, phone: account.phone });
+                      setContact({ name: "", email: account.email, phone: savedProfile.phone });
                     }}
                   />
                   For someone else
                 </label>
             </div>
-            {(!forMe || !account.name) && (
+            {(!forMe || !savedProfile.name) && (
               <input required name="name" placeholder="Name" value={contact.name} onChange={(e) => setContact({ ...contact, name: e.target.value })} className="h-12 w-full rounded-xl border px-4" />
             )}
-            {(!forMe || !account.phone) && (
+            {(!forMe || !savedProfile.phone) && (
               <input required name="phone" placeholder="Phone" value={contact.phone} onChange={(e) => setContact({ ...contact, phone: e.target.value })} className="h-12 w-full rounded-xl border px-4" />
             )}
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
