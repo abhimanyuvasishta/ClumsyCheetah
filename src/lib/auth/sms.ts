@@ -1,4 +1,4 @@
-import { createHmac, timingSafeEqual } from "crypto";
+import { Webhook } from "standardwebhooks";
 
 export function indianMobileFromE164(phone: string): string | null {
   const digits = phone.replace(/\D/g, "");
@@ -7,41 +7,44 @@ export function indianMobileFromE164(phone: string): string | null {
   return null;
 }
 
-function hookSecretBytes(): Buffer | null {
-  const raw = process.env.SEND_SMS_HOOK_SECRET?.trim();
-  if (!raw) return null;
-  const withoutPrefix = raw.replace(/^v1,/, "").replace(/^whsec_/, "");
-  try {
-    return Buffer.from(withoutPrefix, "base64");
-  } catch {
-    return null;
+function stripQuotes(value: string): string {
+  const trimmed = value.trim();
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    return trimmed.slice(1, -1).trim();
   }
+  return trimmed;
 }
 
-/** Standard Webhooks (Supabase Auth Hooks). */
-export function verifySendSmsSignature(payload: string, headers: Headers): boolean {
-  const secret = hookSecretBytes();
+function hookSecretForVerifier(): string | null {
+  const raw = stripQuotes(process.env.SEND_SMS_HOOK_SECRET ?? "");
+  if (!raw) return null;
+  // Dashboard copies "v1,whsec_…". GoTrue signs with the part after "v1,".
+  return raw.replace(/^v1,/, "");
+}
+
+export function verifySendSmsPayload(
+  payload: string,
+  headers: Headers,
+): { user?: { phone?: string }; sms?: { otp?: string } } {
+  const secret = hookSecretForVerifier();
+  if (!secret) {
+    throw new Error("SEND_SMS_HOOK_SECRET is not set on the server. Add it in Vercel and redeploy.");
+  }
   const id = headers.get("webhook-id");
   const timestamp = headers.get("webhook-timestamp");
-  const signatureHeader = headers.get("webhook-signature");
-  if (!secret || !id || !timestamp || !signatureHeader) return false;
-  const ts = Number(timestamp);
-  if (!Number.isFinite(ts) || Math.abs(Date.now() / 1000 - ts) > 300) return false;
-  const signed = `${id}.${timestamp}.${payload}`;
-  const expected = createHmac("sha256", secret).update(signed).digest("base64");
-  const candidates = signatureHeader.split(" ").flatMap((part) => {
-    const value = part.startsWith("v1,") ? part.slice(3) : part;
-    return value ? [value] : [];
-  });
-  return candidates.some((sig) => {
-    try {
-      const got = Buffer.from(sig, "base64");
-      const want = Buffer.from(expected, "base64");
-      return got.length === want.length && timingSafeEqual(got, want);
-    } catch {
-      return false;
-    }
-  });
+  const signature = headers.get("webhook-signature");
+  if (!id || !timestamp || !signature) {
+    throw new Error("SMS hook request is missing webhook signature headers.");
+  }
+  const wh = new Webhook(secret);
+  return wh.verify(payload, {
+    "webhook-id": id,
+    "webhook-timestamp": timestamp,
+    "webhook-signature": signature,
+  }) as { user?: { phone?: string }; sms?: { otp?: string } };
 }
 
 export async function sendOtpSms(phoneE164: string, otp: string): Promise<void> {
@@ -49,11 +52,11 @@ export async function sendOtpSms(phoneE164: string, otp: string): Promise<void> 
   if (!mobile) {
     throw new Error("Only Indian mobile numbers are supported for OTP");
   }
-  const key = process.env.TWO_FACTOR_API_KEY?.trim();
+  const key = stripQuotes(process.env.TWO_FACTOR_API_KEY ?? "");
   if (!key) {
-    throw new Error("TWO_FACTOR_API_KEY is not set");
+    throw new Error("TWO_FACTOR_API_KEY is not set on the server. Add it in Vercel and redeploy.");
   }
-  const template = process.env.TWO_FACTOR_TEMPLATE?.trim();
+  const template = stripQuotes(process.env.TWO_FACTOR_TEMPLATE ?? "");
   const path = template
     ? `https://2factor.in/API/V1/${encodeURIComponent(key)}/SMS/${mobile}/${encodeURIComponent(otp)}/${encodeURIComponent(template)}`
     : `https://2factor.in/API/V1/${encodeURIComponent(key)}/SMS/${mobile}/${encodeURIComponent(otp)}`;

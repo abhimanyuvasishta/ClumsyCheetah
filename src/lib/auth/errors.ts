@@ -9,7 +9,10 @@ export function authErrorMessage(raw: string | null | undefined, source: "google
     }
     return "Google is not turned on yet. In Supabase go to Authentication → Providers → Google, enable it, and paste the Client ID and Secret.";
   }
-  if (source !== "google" && /error sending|unable to send|sms|twilio|textlocal|messagebird|vonage/i.test(text)) {
+  if (/hook requires authorization token|SEND_SMS_HOOK_SECRET/i.test(text)) {
+    return "Add SEND_SMS_HOOK_SECRET on Vercel (the v1,whsec_ value from the Supabase Send SMS hook), Production environment, then Redeploy.";
+  }
+  if (source !== "google" && /error sending|unable to send|sms|twilio|textlocal|messagebird|vonage|TWO_FACTOR/i.test(text)) {
     return "SMS did not send. Check TWO_FACTOR_API_KEY on Vercel and the Send SMS hook in Supabase.";
   }
   if (/redirect/i.test(text)) {
