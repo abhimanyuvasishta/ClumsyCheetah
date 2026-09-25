@@ -10,6 +10,7 @@ import { useStorefrontConfig } from "@/components/storefront/storefront-config-p
 import { amountToFreeDelivery } from "@/lib/commerce/cart";
 import { formatInr } from "@/lib/money";
 import { cn } from "@/lib/utils";
+import { CartCoupon } from "@/components/storefront/cart-coupon";
 import type { CatalogProduct } from "@/types/catalog";
 
 export function CartDrawer({ upsells = [] }: { upsells?: CatalogProduct[] }) {
@@ -91,6 +92,7 @@ export function CartDrawer({ upsells = [] }: { upsells?: CatalogProduct[] }) {
                 <span>Subtotal</span>
                 <Price paise={subtotal} />
               </div>
+              <CartCoupon lines={lines} />
               <Link href="/cart" onClick={() => setDrawerOpen(false)} className={cn(buttonVariants({ variant: "outline" }), "h-11 w-full rounded-full")}>
                 View cart
               </Link>

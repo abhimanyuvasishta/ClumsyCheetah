@@ -8,7 +8,9 @@ import { ProductBadge } from "@/components/storefront/product-badge";
 import { Rating } from "@/components/storefront/rating";
 import { WishlistButton } from "@/components/storefront/wishlist-button";
 import { AddToCartButton } from "@/components/storefront/add-to-cart-button";
+import { useProductOffers } from "@/components/storefront/shop-commerce";
 import { startingPrice } from "@/lib/catalog/pricing";
+import { offerLabel } from "@/lib/offers/types";
 import type { CatalogProduct } from "@/types/catalog";
 
 export function ProductCard({ product }: { product: CatalogProduct }) {
@@ -18,6 +20,14 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
     [product, variantId],
   );
   const image = product.images.find((i) => i.isPrimary) ?? product.images[0];
+  const offers = useProductOffers({
+    id: product.id,
+    categoryId: product.category?.id ?? null,
+    isEggless: product.isEggless,
+    isVegetarian: product.isVegetarian,
+    isBestseller: product.isBestseller,
+    isNewArrival: product.isNewArrival,
+  });
 
   return (
     <article className="group flex h-full flex-col">
@@ -39,6 +49,14 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
           {product.isBestseller ? <ProductBadge kind="BESTSELLER" /> : null}
           {product.isNewArrival ? <ProductBadge kind="NEW" /> : null}
           {product.isEggless ? <ProductBadge kind="EGGLESS" /> : null}
+          {offers.slice(0, 1).map((offer) => (
+            <span
+              key={offer.id}
+              className="rounded-full bg-gold px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-espresso"
+            >
+              {offerLabel(offer)}
+            </span>
+          ))}
         </div>
         <WishlistButton productId={product.id} className="absolute right-2.5 top-2.5" />
       </div>

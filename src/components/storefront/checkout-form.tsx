@@ -11,6 +11,9 @@ import { cn } from "@/lib/utils";
 import { placeCheckoutOrder } from "@/lib/checkout/place-order";
 import { buildUpiPayUrl, upiQrImageSrc } from "@/lib/checkout/upi";
 import { saveAddress, type SavedAddress } from "@/app/(storefront)/account/addresses/actions";
+import { previewCoupon, type CouponPreview } from "@/app/admin/offers/actions";
+import { CartCoupon } from "@/components/storefront/cart-coupon";
+import { readStoredCoupon, writeStoredCoupon } from "@/components/storefront/shop-commerce";
 
 const steps = ["Contact", "Delivery", "Payment"] as const;
 
@@ -43,7 +46,7 @@ export function CheckoutForm({
   const [step, setStep] = useState(0);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [method, setMethod] = useState<"UPI" | "COD">("UPI");
+  const [method] = useState<"UPI">("UPI");
   const [forMe, setForMe] = useState(Boolean(account));
   const [contact, setContact] = useState({
     name: account?.name ?? "",
@@ -63,6 +66,28 @@ export function CheckoutForm({
     notes: "",
   });
   const [savePending, setSavePending] = useState(false);
+  const [gstin, setGstin] = useState("");
+  const [couponQuote, setCouponQuote] = useState<CouponPreview | null>(null);
+
+  useEffect(() => {
+    async function load() {
+      const code = readStoredCoupon();
+      if (!code || !lines.length) {
+        setCouponQuote(null);
+        return;
+      }
+      const result = await previewCoupon(
+        code,
+        lines.map((l) => ({ productId: l.productId, quantity: l.quantity, unitPaise: l.unitPricePaise })),
+      );
+      setCouponQuote(result);
+    }
+    void load();
+    window.addEventListener("cc-coupon", load);
+    return () => window.removeEventListener("cc-coupon", load);
+  }, [lines]);
+
+  const payable = Math.max(0, subtotal - (couponQuote && !couponQuote.error ? couponQuote.discountPaise ?? 0 : 0));
 
   useEffect(() => {
     const selected = addresses.find((a) => a.id === addressId);
@@ -74,8 +99,8 @@ export function CheckoutForm({
   const upiVpa = process.env.NEXT_PUBLIC_UPI_VPA ?? "";
   const payeeName = process.env.NEXT_PUBLIC_UPI_PAYEE_NAME ?? "Clumsy Cheetah";
   const upiUrl = useMemo(
-    () => buildUpiPayUrl({ vpa: upiVpa, payeeName, amountPaise: subtotal, note: "Clumsy Cheetah order" }),
-    [upiVpa, payeeName, subtotal],
+    () => buildUpiPayUrl({ vpa: upiVpa, payeeName, amountPaise: payable, note: "Clumsy Cheetah order" }),
+    [upiVpa, payeeName, payable],
   );
 
   if (!lines.length) {
@@ -97,6 +122,8 @@ export function CheckoutForm({
       ...delivery,
       method,
       lines: lines.map((l) => ({ variantId: l.variantId, quantity: l.quantity })),
+      couponCode: couponQuote && !couponQuote.error ? couponQuote.code : readStoredCoupon(),
+      gstin,
     });
     setPending(false);
     if (result.error || !result.orderNumber) {
@@ -104,6 +131,7 @@ export function CheckoutForm({
       return;
     }
     clear();
+    writeStoredCoupon("");
     router.push(`/checkout/success?order=${encodeURIComponent(result.orderNumber)}&pay=${method}`);
   }
 
@@ -232,6 +260,13 @@ export function CheckoutForm({
                   onChange={(e) => setDelivery({ ...delivery, notes: e.target.value })}
                   className="min-h-24 w-full rounded-xl border px-4 py-3"
                 />
+                <input
+                  name="gstin"
+                  placeholder="GSTIN (optional)"
+                  value={gstin}
+                  onChange={(e) => setGstin(e.target.value.toUpperCase())}
+                  className="h-12 w-full rounded-xl border px-4"
+                />
                 <button
                   type="button"
                   className={cn(buttonVariants(), "h-12 w-full rounded-full")}
@@ -302,6 +337,13 @@ export function CheckoutForm({
                   />
                 </div>
                 {account ? <input type="hidden" name="state" value="Maharashtra" /> : null}
+                <input
+                  name="gstin"
+                  placeholder="GSTIN (optional)"
+                  value={gstin}
+                  onChange={(e) => setGstin(e.target.value.toUpperCase())}
+                  className="h-12 w-full rounded-xl border px-4"
+                />
                 <textarea
                   name="delivery_instructions"
                   placeholder="Delivery notes"
@@ -325,39 +367,25 @@ export function CheckoutForm({
         {step === 2 ? (
           <div>
             <h1 className="font-heading text-3xl">Payment</h1>
-            <p className="mt-3 text-muted-foreground">No cards on this site. Pay by UPI QR or cash when it arrives.</p>
-            <div className="mt-6 space-y-3">
-              <label className="flex min-h-12 items-center gap-3 rounded-xl border px-4">
-                <input type="radio" name="pay" checked={method === "UPI"} onChange={() => setMethod("UPI")} />
-                UPI QR
-              </label>
-              <label className="flex min-h-12 items-center gap-3 rounded-xl border px-4">
-                <input type="radio" name="pay" checked={method === "COD"} onChange={() => setMethod("COD")} />
-                Cash on delivery
-              </label>
-            </div>
-            {method === "UPI" ? (
-              <div className="mt-6 rounded-2xl border p-4 text-center">
-                {upiUrl ? (
-                  <>
-                    <img src={upiQrImageSrc(upiUrl)} alt="UPI payment QR" className="mx-auto h-52 w-52" />
-                    <p className="mt-3 text-sm">
-                      Scan with any UPI app. Amount <Price paise={subtotal} />
-                    </p>
-                    <p className="mt-1 font-mono text-xs text-muted-foreground">{upiVpa}</p>
-                    <a href={upiUrl} className="mt-3 inline-block text-sm underline">
-                      Open UPI app
-                    </a>
-                  </>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    Add <code>NEXT_PUBLIC_UPI_VPA</code> on Vercel so the QR can generate. COD still works.
+            <p className="mt-3 text-muted-foreground">Pay by UPI QR. We do not take cash on delivery.</p>
+            <div className="mt-6 rounded-2xl border p-4 text-center">
+              {upiUrl ? (
+                <>
+                  <img src={upiQrImageSrc(upiUrl)} alt="UPI payment QR" className="mx-auto h-52 w-52" />
+                  <p className="mt-3 text-sm">
+                    Scan with any UPI app. Amount <Price paise={payable} />
                   </p>
-                )}
-              </div>
-            ) : (
-              <p className="mt-4 text-sm text-muted-foreground">Pay cash to the rider. The kitchen will see this as COD.</p>
-            )}
+                  <p className="mt-1 font-mono text-xs text-muted-foreground">{upiVpa}</p>
+                  <a href={upiUrl} className="mt-3 inline-block text-sm underline">
+                    Open UPI app
+                  </a>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Add <code>NEXT_PUBLIC_UPI_VPA</code> on Vercel so the QR can generate.
+                </p>
+              )}
+            </div>
             {error ? <p className="mt-4 text-sm text-destructive">{error}</p> : null}
             <button type="button" className={cn(buttonVariants(), "mt-6 h-12 w-full rounded-full")} disabled={pending} onClick={placeOrder}>
               {pending ? "Placing order…" : "Place order"}
@@ -377,10 +405,17 @@ export function CheckoutForm({
             </li>
           ))}
         </ul>
+        <CartCoupon lines={lines} />
         <div className="mt-4 flex justify-between border-t pt-3 font-medium">
           <span>Total</span>
-          <Price paise={subtotal} />
+          <Price paise={payable} />
         </div>
+        {couponQuote && !couponQuote.error ? (
+          <p className="mt-2 text-[11px] text-muted-foreground">
+            {couponQuote.message}
+            {couponQuote.giftName ? ` · gift: ${couponQuote.giftName}` : ""}
+          </p>
+        ) : null}
         <p className="mt-2 text-[11px] text-muted-foreground">Final total is calculated on the server from catalog prices.</p>
       </aside>
     </div>

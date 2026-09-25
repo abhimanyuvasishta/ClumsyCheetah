@@ -10,6 +10,8 @@ import { amountToFreeDelivery } from "@/lib/commerce/cart";
 import { formatInr } from "@/lib/money";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { CartCoupon } from "@/components/storefront/cart-coupon";
+import { GstToggle } from "@/components/storefront/price";
 
 export default function CartPage() {
   const { lines, subtotal, setQuantity, remove } = useCart();
@@ -86,13 +88,8 @@ export default function CartPage() {
         {remaining > 0 ? (
           <p className="mt-3 text-sm text-muted-foreground">You’re {formatInr(remaining)} away from free delivery.</p>
         ) : null}
-        <form className="mt-4 flex gap-2" onSubmit={(e) => e.preventDefault()}>
-          <input name="coupon" placeholder="Coupon" className="h-11 flex-1 rounded-full border px-4 text-sm" />
-          <button type="submit" className="h-11 rounded-full border px-4 text-sm">
-            Apply
-          </button>
-        </form>
-        <p className="mt-2 text-xs text-muted-foreground">Coupons are checked on the server at checkout — not in this box.</p>
+        <GstToggle className="mt-4" />
+        <CartCoupon lines={lines} />
         <div className="mt-4 flex justify-between font-medium">
           <span>Total</span>
           <Price paise={subtotal} />

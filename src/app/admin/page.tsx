@@ -67,6 +67,9 @@ export default async function AdminHomePage() {
         <Link href="/admin/appearance" className="underline">
           Website
         </Link>
+        <Link href="/admin/offers" className="underline">
+          Offers
+        </Link>
       </div>
     </div>
   );

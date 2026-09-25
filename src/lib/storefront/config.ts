@@ -230,7 +230,7 @@ export const defaultStorefrontConfig: StorefrontConfig = {
     },
     checkout: {
       heading: "Checkout",
-      body: "Pay with UPI QR or cash on delivery.",
+      body: "Pay with UPI QR at checkout.",
       emptyTitle: "Nothing to check out yet.",
       emptyCta: "Shop the good stuff",
     },

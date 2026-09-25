@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { listAdminProducts } from "@/lib/admin/catalog";
 import { formatInr } from "@/lib/money";
 import { buttonVariants } from "@/components/ui/button";
@@ -61,6 +62,7 @@ export default async function AdminProductsPage({
         <table className="w-full min-w-[720px] text-left text-sm">
           <thead className="border-b bg-[oklch(0.98_0.004_250)] text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
+              <th className="px-3 py-2">Photo</th>
               <th className="px-3 py-2">Product</th>
               <th className="px-3 py-2">SKU</th>
               <th className="px-3 py-2">Category</th>
@@ -74,6 +76,13 @@ export default async function AdminProductsPage({
               const low = prices.length ? Math.min(...prices) : 0;
               return (
                 <tr key={p.id} className="border-b last:border-0 hover:bg-muted/40">
+                  <td className="px-3 py-2">
+                    <div className="relative size-12 overflow-hidden rounded bg-muted">
+                      {p.thumbnail_url ? (
+                        <Image src={p.thumbnail_url} alt="" fill className="object-cover" />
+                      ) : null}
+                    </div>
+                  </td>
                   <td className="px-3 py-2">
                     <Link href={`/admin/products/${p.id}`} className="font-medium hover:underline">
                       {p.name}
@@ -91,7 +100,7 @@ export default async function AdminProductsPage({
             })}
             {!filtered.length ? (
               <tr>
-                <td colSpan={5} className="px-3 py-8 text-center text-sm text-muted-foreground">
+                <td colSpan={6} className="px-3 py-8 text-center text-sm text-muted-foreground">
                   No products. Run seed SQL or click New product.
                 </td>
               </tr>

@@ -4,6 +4,7 @@ import { ProductDetail } from "@/components/storefront/product-detail";
 import { ProductJsonLd } from "@/components/storefront/product-json-ld";
 import { RecentlyViewedStrip } from "@/components/storefront/recently-viewed-strip";
 import { getProductBySlug, listProducts, listRelatedProducts } from "@/lib/catalog/queries";
+import { listPublishedReviews } from "@/lib/catalog/reviews";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -37,11 +38,11 @@ export default async function ProductPage({ params }: Props) {
   const product = await getProductBySlug(slug);
   if (!product) notFound();
   const related = await listRelatedProducts(product);
-  const catalog = await listProducts();
+  const [catalog, reviews] = await Promise.all([listProducts(), listPublishedReviews(product.id)]);
   return (
     <>
       <ProductJsonLd product={product} />
-      <ProductDetail product={product} related={related} />
+      <ProductDetail product={product} related={related} reviews={reviews} />
       <RecentlyViewedStrip products={catalog} currentSlug={product.slug} />
     </>
   );

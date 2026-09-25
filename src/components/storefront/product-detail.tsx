@@ -12,15 +12,21 @@ import { Breadcrumbs } from "@/components/storefront/breadcrumbs";
 import { ProductBadge } from "@/components/storefront/product-badge";
 import { useCart } from "@/components/storefront/cart-provider";
 import { TrackRecentlyViewed } from "@/components/storefront/recently-viewed";
+import { useProductOffers } from "@/components/storefront/shop-commerce";
 import { discountPercent } from "@/lib/money";
+import { offerLabel } from "@/lib/offers/types";
 import type { CatalogProduct, CatalogVariant } from "@/types/catalog";
+import type { ProductReview } from "@/lib/catalog/reviews";
+import { averageRating } from "@/lib/catalog/reviews";
 
 export function ProductDetail({
   product,
   related,
+  reviews = [],
 }: {
   product: CatalogProduct;
   related: CatalogProduct[];
+  reviews?: ProductReview[];
 }) {
   const router = useRouter();
   const { addItem } = useCart();
@@ -38,6 +44,15 @@ export function ProductDetail({
   const weights = product.variants.filter((v) => (variant?.flavour ? v.flavour === variant.flavour : true));
   const discount = variant ? discountPercent(variant.pricePaise, variant.compareAtPaise) : null;
   const max = variant?.maxOrderQty ?? 12;
+  const offers = useProductOffers({
+    id: product.id,
+    categoryId: product.category?.id ?? null,
+    isEggless: product.isEggless,
+    isVegetarian: product.isVegetarian,
+    isBestseller: product.isBestseller,
+    isNewArrival: product.isNewArrival,
+  });
+  const reviewAvg = averageRating(reviews);
 
   function selectVariant(next: CatalogVariant) {
     setVariantId(next.id);
@@ -95,11 +110,35 @@ export function ProductDetail({
               {product.isBestseller ? <ProductBadge kind="BESTSELLER" /> : null}
               {product.isNewArrival ? <ProductBadge kind="NEW" /> : null}
               {product.isEggless ? <ProductBadge kind="EGGLESS" /> : null}
+              {offers.map((offer) => (
+                <span
+                  key={offer.id}
+                  className="rounded-full bg-gold px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-espresso"
+                >
+                  {offerLabel(offer)}
+                  {offer.coupon_code ? ` · ${offer.coupon_code}` : ""}
+                </span>
+              ))}
             </div>
             <h1 className="mt-3 font-heading text-4xl leading-[1.05] sm:text-5xl">{product.name}</h1>
             <div className="mt-2">
-              <Rating value={product.isBestseller ? 4.9 : 4.7} />
+              {reviewAvg != null ? (
+                <Rating value={reviewAvg} count={reviews.length} />
+              ) : (
+                <p className="text-xs text-muted-foreground">No customer reviews yet</p>
+              )}
             </div>
+            {offers.length ? (
+              <p className="mt-3 text-sm">
+                {offers.map((o) => o.banner_text || o.name).join(" · ")}
+                {offers.some((o) => o.coupon_code)
+                  ? ` Use ${offers
+                      .map((o) => o.coupon_code)
+                      .filter(Boolean)
+                      .join(" or ")} at checkout.`
+                  : ""}
+              </p>
+            ) : null}
             {variant ? (
               <div className="mt-4 flex items-baseline gap-3">
                 <Price paise={variant.pricePaise} compareAtPaise={variant.compareAtPaise} className="text-2xl" />
@@ -232,6 +271,23 @@ export function ProductDetail({
             </details>
           </div>
         </div>
+
+        {reviews.length ? (
+          <section className="mt-12">
+            <h2 className="font-heading text-3xl">Customer feedback</h2>
+            <ul className="mt-6 space-y-4">
+              {reviews.map((review) => (
+                <li key={review.id} className="rounded-[1.1rem] border bg-surface p-4">
+                  <p className="text-sm font-medium">
+                    {review.rating}/5{review.title ? ` · ${review.title}` : ""}
+                  </p>
+                  {review.body ? <p className="mt-2 text-sm text-muted-foreground">{review.body}</p> : null}
+                  <p className="mt-2 text-xs text-muted-foreground">{new Date(review.createdAt).toLocaleDateString("en-IN")}</p>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
 
         {related.length ? (
           <section className="mt-16">

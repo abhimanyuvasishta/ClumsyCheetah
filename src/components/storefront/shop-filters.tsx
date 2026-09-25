@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { SlidersHorizontal } from "lucide-react";
+import { GstToggle } from "@/components/storefront/price";
 
 const sorts = [
   { value: "popular", label: "Recommended" },
@@ -75,6 +76,7 @@ export function ShopFilters({ categories }: { categories: { slug: string; name: 
           <div className="px-4 pb-8">{filters}</div>
         </SheetContent>
       </Sheet>
+      <GstToggle />
       <label className="flex items-center gap-2 text-sm">
         Sort
         <select

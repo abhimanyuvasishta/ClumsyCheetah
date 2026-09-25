@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { discountPercent, formatInr, lineTotalPaise, rupeesToPaise } from "./money";
+import { discountPercent, exclusiveOfGst, formatInr, lineTotalPaise, rupeesToPaise } from "./money";
 
 describe("money", () => {
   it("formats paise as INR", () => {
@@ -18,5 +18,9 @@ describe("money", () => {
   it("converts rupees to paise on the server", () => {
     expect(rupeesToPaise("749")).toBe(74900);
     expect(rupeesToPaise("749.50")).toBe(74950);
+  });
+
+  it("shows 5% GST exclusive of listed price", () => {
+    expect(exclusiveOfGst(10500)).toBe(10000);
   });
 });

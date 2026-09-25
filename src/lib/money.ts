@@ -1,3 +1,5 @@
+export const GST_RATE = 0.05;
+
 export function formatInr(paise: number): string {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
@@ -31,4 +33,13 @@ export function rupeesToPaise(rupees: string | number): number {
 
 export function paiseToRupeesInput(paise: number): string {
   return (Math.round(paise) / 100).toFixed(2);
+}
+
+/** Listed shop prices are GST-inclusive at 5%. */
+export function exclusiveOfGst(inclusivePaise: number): number {
+  return Math.round(inclusivePaise / (1 + GST_RATE));
+}
+
+export function gstPortionPaise(inclusivePaise: number): number {
+  return Math.max(0, inclusivePaise - exclusiveOfGst(inclusivePaise));
 }

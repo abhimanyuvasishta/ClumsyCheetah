@@ -70,7 +70,7 @@ export function StoreFooter() {
       <div className="border-t border-white/10">
         <div className="store-wrap flex flex-col gap-2 py-4 text-xs text-cream/60 sm:flex-row sm:justify-between">
           <p>© {new Date().getFullYear()} Clumsy Cheetah. Baked in Mumbai.</p>
-          <p>UPI · Cards · COD — through checkout, never stored here.</p>
+          <p>UPI at checkout — we never store card numbers here.</p>
         </div>
       </div>
     </footer>
