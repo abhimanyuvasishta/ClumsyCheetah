@@ -1,6 +1,5 @@
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
-import { toE164Phone } from "@/lib/auth/phone";
 import { AUTH_NEXT_COOKIE } from "@/lib/auth/errors";
 
 export type LoginState = { error?: string; success?: boolean; needsEmailConfirm?: boolean; url?: string };
@@ -55,55 +54,6 @@ export async function signInWithPassword(email: string, password: string): Promi
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
     return { error: error.message };
-  }
-  return { success: true };
-}
-
-export async function requestPhoneOtp(phone: string): Promise<LoginState> {
-  if (!isSupabaseConfigured()) {
-    return { error: "Supabase is not configured." };
-  }
-  const e164 = toE164Phone(phone);
-  if (!e164) {
-    return { error: "Enter a 10-digit Indian mobile number" };
-  }
-  const supabase = createBrowserSupabaseClient();
-  if (!supabase) {
-    return { error: "Could not start a Supabase client." };
-  }
-  const { error } = await supabase.auth.signInWithOtp({
-    phone: e164,
-    options: { shouldCreateUser: true, channel: "sms" },
-  });
-  if (error) {
-    return { error: error.message };
-  }
-  return { success: true };
-}
-
-export async function verifyPhoneOtp(phone: string, token: string): Promise<LoginState> {
-  const e164 = toE164Phone(phone);
-  if (!e164) {
-    return { error: "Enter a 10-digit Indian mobile number" };
-  }
-  const code = token.replace(/\s/g, "");
-  if (!/^\d{6}$/.test(code)) {
-    return { error: "Enter the 6-digit code from SMS" };
-  }
-  const supabase = createBrowserSupabaseClient();
-  if (!supabase) {
-    return { error: "Could not start a Supabase client." };
-  }
-  const { data, error } = await supabase.auth.verifyOtp({
-    phone: e164,
-    token: code,
-    type: "sms",
-  });
-  if (error) {
-    return { error: error.message };
-  }
-  if (data.user) {
-    await supabase.from("profiles").update({ phone: e164 }).eq("id", data.user.id);
   }
   return { success: true };
 }

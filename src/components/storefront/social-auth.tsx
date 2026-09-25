@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { requestPhoneOtp, signInWithGoogle, verifyPhoneOtp } from "@/lib/auth/actions";
+import { requestPhoneOtp, verifyPhoneOtp } from "@/app/(storefront)/login/phone-actions";
+import { signInWithGoogle } from "@/lib/auth/actions";
 import { authErrorMessage } from "@/lib/auth/errors";
+import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -15,6 +17,7 @@ export function SocialAuth({ next = "/account" }: { next?: string }) {
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
   const [codeSent, setCodeSent] = useState(false);
+  const [factorSession, setFactorSession] = useState("");
   const [resendIn, setResendIn] = useState(0);
 
   useEffect(() => {
@@ -47,6 +50,7 @@ export function SocialAuth({ next = "/account" }: { next?: string }) {
       setError(authErrorMessage(result.error, "phone"));
       return;
     }
+    setFactorSession(result.sessionId ?? "");
     setCodeSent(true);
     setResendIn(45);
   }
@@ -55,11 +59,20 @@ export function SocialAuth({ next = "/account" }: { next?: string }) {
     e.preventDefault();
     setPending("verify");
     setError(null);
-    const result = await verifyPhoneOtp(phone, code);
+    const result = await verifyPhoneOtp(phone, factorSession, code);
     setPending(null);
     if (result.error) {
       setError(authErrorMessage(result.error, "phone"));
       return;
+    }
+    if (result.accessToken && result.refreshToken) {
+      const supabase = createBrowserSupabaseClient();
+      if (supabase) {
+        await supabase.auth.setSession({
+          access_token: result.accessToken,
+          refresh_token: result.refreshToken,
+        });
+      }
     }
     router.push(next);
     router.refresh();
