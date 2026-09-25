@@ -5,12 +5,12 @@ export function authErrorMessage(raw: string | null | undefined, source: "google
   const text = decodeURIComponent(raw.replace(/\+/g, " "));
   if (/provider is not enabled/i.test(text)) {
     if (source === "phone") {
-      return "Phone login is not on yet. In Supabase go to Authentication → Providers → Phone, enable it, and connect Twilio (or Textlocal).";
+      return "Phone login is not on yet. In Supabase go to Authentication → Providers → Phone, enable it, then add the Send SMS hook to this site (no Twilio needed).";
     }
     return "Google is not turned on yet. In Supabase go to Authentication → Providers → Google, enable it, and paste the Client ID and Secret.";
   }
   if (source !== "google" && /error sending|unable to send|sms|twilio|textlocal|messagebird|vonage/i.test(text)) {
-    return "SMS did not send. In Supabase, Authentication → Providers → Phone, check the SMS credentials and that India (+91) is allowed.";
+    return "SMS did not send. Check TWO_FACTOR_API_KEY on Vercel and the Send SMS hook in Supabase.";
   }
   if (/redirect/i.test(text)) {
     return "Add https://www.clumsycheetah.in/auth/callback to Supabase Authentication → URL configuration → Redirect URLs.";
