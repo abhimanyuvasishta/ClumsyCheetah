@@ -56,7 +56,7 @@ export async function sendOtpSms(phoneE164: string, otp: string): Promise<void> 
   if (!key) {
     throw new Error("TWO_FACTOR_API_KEY is not set on the server. Add it in Vercel and redeploy.");
   }
-  const template = stripQuotes(process.env.TWO_FACTOR_TEMPLATE ?? "") || "OTP1";
+  const template = stripQuotes(process.env.TWO_FACTOR_TEMPLATE ?? "") || "one";
   const urls = [
     `https://2factor.in/API/V1/${encodeURIComponent(key)}/SMS/${mobile}/${encodeURIComponent(otp)}/${encodeURIComponent(template)}`,
     `https://2factor.in/API/V1/${encodeURIComponent(key)}/SMS/91${mobile}/${encodeURIComponent(otp)}/${encodeURIComponent(template)}`,
