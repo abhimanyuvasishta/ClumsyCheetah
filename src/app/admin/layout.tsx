@@ -44,7 +44,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="admin-shell flex min-h-full flex-1 bg-[oklch(0.97_0.005_250)] text-[oklch(0.22_0.02_250)]">
-      <aside className="hidden w-56 shrink-0 border-r border-border bg-[oklch(0.99_0.002_250)] md:flex md:flex-col">
+      <aside className="no-print hidden w-56 shrink-0 border-r border-border bg-[oklch(0.99_0.002_250)] md:flex md:flex-col">
         <div className="border-b px-4 py-4">
           <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Staff</p>
           <p className="text-sm font-semibold">Clumsy Cheetah Ops</p>
@@ -64,7 +64,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <p className="px-4 py-3 text-[11px] text-muted-foreground">{staff?.email ?? "Configure Supabase to lock this down"}</p>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between border-b bg-white px-4 py-3 md:px-6">
+        <header className="no-print flex items-center justify-between border-b bg-white px-4 py-3 md:px-6">
           <p className="text-sm font-medium">Operations</p>
           <Link href="/" className="text-xs text-muted-foreground hover:underline">
             View storefront
@@ -76,7 +76,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             with a staff role in <code>user_roles</code> can enter. There is no demo password.
           </div>
         ) : null}
-        <div className="flex-1 p-4 md:p-6">{children}</div>
+        <div className="print-bill-page flex-1 p-4 md:p-6">{children}</div>
       </div>
     </div>
   );

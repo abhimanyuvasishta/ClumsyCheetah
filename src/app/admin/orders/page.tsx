@@ -53,6 +53,7 @@ export default async function AdminOrdersPage({
               <th className="px-3 py-2">Status</th>
               <th className="px-3 py-2">Total</th>
               <th className="px-3 py-2">When</th>
+              <th className="px-3 py-2"></th>
             </tr>
           </thead>
           <tbody>
@@ -73,11 +74,16 @@ export default async function AdminOrdersPage({
                 </td>
                 <td className="px-3 py-2 tabular-nums">{formatInr(o.total_paise)}</td>
                 <td className="px-3 py-2 text-xs text-muted-foreground">{new Date(o.placed_at).toLocaleString("en-IN")}</td>
+                <td className="px-3 py-2 text-right">
+                  <Link href={`/admin/orders/${o.id}/bill`} className="text-xs underline">
+                    Bill
+                  </Link>
+                </td>
               </tr>
             ))}
             {!orders.length ? (
               <tr>
-                <td colSpan={5} className="px-3 py-8 text-center text-sm text-muted-foreground">
+                <td colSpan={6} className="px-3 py-8 text-center text-sm text-muted-foreground">
                   No orders yet. Use New order.
                 </td>
               </tr>

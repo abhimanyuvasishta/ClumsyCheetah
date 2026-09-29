@@ -186,3 +186,28 @@
   --primary: oklch(0.35 0.04 250);
   --font-heading: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
 }
+
+@media print {
+  @page {
+    size: A4;
+    margin: 10mm;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .admin-shell {
+    background: white !important;
+    color: black;
+  }
+
+  .print-bill-page {
+    padding: 0 !important;
+  }
+
+  .print-bill {
+    max-width: none;
+    box-shadow: none;
+  }
+}

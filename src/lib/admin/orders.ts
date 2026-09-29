@@ -23,6 +23,9 @@ export type AdminOrderDetail = AdminOrderRow & {
   discount_paise: number;
   delivery_fee_paise: number;
   tax_paise: number;
+  coupon_code: string | null;
+  gstin: string | null;
+  shipping_address: Record<string, unknown> | null;
   order_items: {
     id: string;
     product_name: string;
@@ -61,7 +64,7 @@ export async function getAdminOrder(id: string): Promise<AdminOrderDetail | null
   const { data, error } = await supabase
     .from("orders")
     .select(
-      "id, order_number, status, contact_name, contact_phone, contact_email, total_paise, placed_at, channel, staff_notes, customer_notes, gift_message, fulfillment_method, delivery_slot_label, subtotal_paise, discount_paise, delivery_fee_paise, tax_paise, order_items (id, product_name, variant_name, sku, quantity, unit_price_paise, line_total_paise), order_status_history (id, from_status, to_status, note, created_at)",
+      "id, order_number, status, contact_name, contact_phone, contact_email, total_paise, placed_at, channel, staff_notes, customer_notes, gift_message, fulfillment_method, delivery_slot_label, subtotal_paise, discount_paise, delivery_fee_paise, tax_paise, coupon_code, gstin, shipping_address, order_items (id, product_name, variant_name, sku, quantity, unit_price_paise, line_total_paise), order_status_history (id, from_status, to_status, note, created_at)",
     )
     .eq("id", id)
     .maybeSingle();

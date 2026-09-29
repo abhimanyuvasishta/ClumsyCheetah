@@ -4,7 +4,8 @@ import { saveStaffNotes, updateOrderStatus } from "@/app/admin/orders/actions";
 import { allowedNextStatuses } from "@/lib/admin/order-status";
 import { getAdminOrder } from "@/lib/admin/orders";
 import { formatInr } from "@/lib/money";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -28,6 +29,12 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         </p>
       </div>
       <div className="flex flex-wrap gap-2">
+        <Link href={`/admin/orders/${order.id}/bill`} className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+          Generate bill
+        </Link>
+        <Link href={`/admin/orders/${order.id}/bill?print=1`} className={cn(buttonVariants({ size: "sm" }))}>
+          Print bill
+        </Link>
         {next.map((status) => (
           <form key={status} action={updateOrderStatus.bind(null, order.id, status)}>
             <Button type="submit" variant={status === "CANCELLED" ? "destructive" : "default"} size="sm">
