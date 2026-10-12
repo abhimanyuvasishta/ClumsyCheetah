@@ -8,16 +8,12 @@ import { ORDER_WRITE_ROLES } from "@/types/roles";
 import type { DatabaseEnums } from "@/types/database";
 import { allowedNextStatuses } from "@/lib/admin/order-status";
 import { hoursFromProducts, promisedAtFromNow } from "@/lib/orders/eta";
+import { istCalendarStamp } from "@/lib/time";
 
 export type OrderActionState = { error?: string; ok?: boolean };
 
 async function orderNumber() {
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  const rand = Math.floor(Math.random() * 9000 + 1000);
-  return `CC-${y}${m}${day}-${rand}`;
+  return `CC-${istCalendarStamp()}-${Math.floor(Math.random() * 9000 + 1000)}`;
 }
 
 export async function createManualOrder(_: OrderActionState, form: FormData): Promise<OrderActionState> {

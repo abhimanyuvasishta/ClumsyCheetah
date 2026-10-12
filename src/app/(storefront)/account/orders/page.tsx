@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getAuthUser } from "@/lib/auth/staff";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { formatInr } from "@/lib/money";
+import { formatIst } from "@/lib/time";
 
 export const metadata: Metadata = { title: "Your orders" };
 export const dynamic = "force-dynamic";
@@ -42,7 +43,7 @@ export default async function AccountOrdersPage() {
               <span className="font-mono">{order.order_number}</span>
               <span>{order.status.replaceAll("_", " ")}</span>
               <span className="tabular-nums">{formatInr(order.total_paise)}</span>
-              <span className="text-xs text-muted-foreground">{new Date(order.placed_at).toLocaleString("en-IN")}</span>
+              <span className="text-xs text-muted-foreground">{formatIst(order.placed_at)}</span>
             </Link>
           </li>
         ))}

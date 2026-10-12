@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getAuthUser } from "@/lib/auth/staff";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { formatInr } from "@/lib/money";
+import { formatIst } from "@/lib/time";
 import { OrderProductFeedback } from "@/components/storefront/order-product-feedback";
 import { OrderEtaClock } from "@/components/storefront/order-eta-clock";
 
@@ -48,7 +49,7 @@ export default async function AccountOrderDetailPage({ params }: { params: Promi
           <h2 className="font-mono text-xl">{order.order_number}</h2>
           <span className="rounded-full bg-secondary px-3 py-1 text-xs">{order.status.replaceAll("_", " ")}</span>
         </div>
-        <p className="mt-1 text-sm text-muted-foreground">{new Date(order.placed_at).toLocaleString("en-IN")}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{formatIst(order.placed_at)}</p>
         <OrderEtaClock promisedAt={order.promised_at} status={order.status} />
         <ul className="mt-6 divide-y text-sm">
           {(order.order_items ?? []).map((item, index) => {

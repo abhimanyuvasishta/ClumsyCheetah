@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { formatIst } from "@/lib/time";
 
 function partsFromMs(ms: number) {
   const total = Math.max(0, Math.floor(ms / 1000));
@@ -47,7 +48,7 @@ export function OrderEtaClock({
         </p>
       )}
       <p className="mt-1 text-xs text-muted-foreground">
-        {new Date(promisedAt).toLocaleString("en-IN")} · kitchen may move this later or earlier
+        {formatIst(promisedAt)} · kitchen may move this later or earlier
       </p>
     </div>
   );

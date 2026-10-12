@@ -1,12 +1,13 @@
 import { adjustOrderEta } from "@/app/admin/orders/actions";
 import { Button } from "@/components/ui/button";
+import { formatIst } from "@/lib/time";
 
 export function OrderEtaControls({ orderId, promisedAt }: { orderId: string; promisedAt: string | null }) {
   return (
     <div className="rounded-lg border bg-white p-4">
       <h2 className="text-sm font-medium">Customer countdown</h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        {promisedAt ? `Currently ${new Date(promisedAt).toLocaleString("en-IN")}` : "No time set yet. Add time to start the clock on My order."}
+        {promisedAt ? `Currently ${formatIst(promisedAt)}` : "No time set yet. Add time to start the clock on My order."}
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
         {[

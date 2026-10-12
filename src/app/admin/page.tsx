@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { formatInr } from "@/lib/money";
+import { startOfIstDay } from "@/lib/time";
 
 export const metadata: Metadata = { title: "Admin dashboard" };
 
@@ -15,8 +16,7 @@ export default async function AdminHomePage() {
   let todayPaise = 0;
 
   if (supabase) {
-    const start = new Date();
-    start.setHours(0, 0, 0, 0);
+    const start = startOfIstDay();
     const [{ count: p }, { count: a }, { count: o }, { count: pl }, { count: c }, today] = await Promise.all([
       supabase.from("products").select("*", { count: "exact", head: true }).is("deleted_at", null),
       supabase.from("products").select("*", { count: "exact", head: true }).eq("status", "ACTIVE").is("deleted_at", null),

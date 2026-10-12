@@ -14,6 +14,7 @@ import { useCart } from "@/components/storefront/cart-provider";
 import { TrackRecentlyViewed } from "@/components/storefront/recently-viewed";
 import { useProductOffers } from "@/components/storefront/shop-commerce";
 import { discountPercent } from "@/lib/money";
+import { formatIstDate } from "@/lib/time";
 import { offerLabel } from "@/lib/offers/types";
 import type { CatalogProduct, CatalogVariant } from "@/types/catalog";
 import type { ProductReview } from "@/lib/catalog/reviews";
@@ -284,7 +285,7 @@ export function ProductDetail({
                     {review.rating}/5{review.title ? ` · ${review.title}` : ""}
                   </p>
                   {review.body ? <p className="mt-2 text-sm text-muted-foreground">{review.body}</p> : null}
-                  <p className="mt-2 text-xs text-muted-foreground">{new Date(review.createdAt).toLocaleDateString("en-IN")}</p>
+                  <p className="mt-2 text-xs text-muted-foreground">{formatIstDate(review.createdAt)}</p>
                 </li>
               ))}
             </ul>

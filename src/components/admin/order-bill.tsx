@@ -1,4 +1,5 @@
 import { exclusiveOfGst, formatInr, gstPortionPaise } from "@/lib/money";
+import { formatIst } from "@/lib/time";
 import {
   locationLines,
   parseShippingAddress,
@@ -41,7 +42,7 @@ export function OrderBill({
           <p className="text-xs uppercase tracking-widest text-neutral-500">Tax invoice</p>
           <p className="font-mono text-lg font-semibold">{order.order_number}</p>
           <p className="mt-1 text-xs text-neutral-600">
-            {new Date(order.placed_at).toLocaleString("en-IN")}
+            {formatIst(order.placed_at)}
           </p>
           <p className="text-xs text-neutral-600">{order.status.replaceAll("_", " ")}</p>
         </div>

@@ -8,6 +8,7 @@ import { getOfferByCode } from "@/lib/offers/public";
 import { offerLifecycle } from "@/lib/offers/types";
 import { createPublicSupabaseClient } from "@/lib/supabase/public";
 import { CATALOG_WRITE_ROLES } from "@/types/roles";
+import { parseIstDatetimeLocal } from "@/lib/time";
 
 export type ActionState = { error?: string; ok?: boolean };
 
@@ -36,9 +37,11 @@ export async function createOffer(_: ActionState, form: FormData): Promise<Actio
     const ends = formString(form, "ends_at");
     if (!name) return { error: "Name the offer" };
     if (!starts || !ends) return { error: "Set a start and end" };
-    const startsAt = new Date(starts);
-    const endsAt = new Date(ends);
-    if (!(endsAt > startsAt)) return { error: "End must be after start" };
+    const startsAt = parseIstDatetimeLocal(starts);
+    const endsAt = parseIstDatetimeLocal(ends);
+    if (Number.isNaN(startsAt.getTime()) || Number.isNaN(endsAt.getTime()) || !(endsAt > startsAt)) {
+      return { error: "End must be after start" };
+    }
 
     const coupon = formString(form, "coupon_code").toUpperCase() || null;
     const percent = formString(form, "percent_off") ? Number(formString(form, "percent_off")) : null;

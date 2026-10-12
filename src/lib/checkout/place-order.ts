@@ -8,6 +8,7 @@ import { offerLifecycle, type OfferRow } from "@/lib/offers/types";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 import { saveAccountPhoneAndAddress } from "@/lib/checkout/save-account";
 import { hoursFromProducts, promisedAtFromNow } from "@/lib/orders/eta";
+import { istCalendarStamp } from "@/lib/time";
 
 export type CheckoutLineInput = { variantId: string; quantity: number };
 export type CheckoutPayload = {
@@ -31,9 +32,7 @@ const OFFER_COLUMNS =
   "id, name, description, kind, coupon_code, percent_off, amount_off_paise, min_order_paise, max_discount_paise, gift_product_id, applicable_product_ids, applicable_category_ids, filter_eggless, filter_vegetarian, filter_bestseller, filter_new_arrival, banner_text, show_banner, starts_at, ends_at, is_active, usage_limit, created_at";
 
 function nextOrderNumber() {
-  const d = new Date();
-  const stamp = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
-  return `CC-${stamp}-${Math.floor(Math.random() * 9000 + 1000)}`;
+  return `CC-${istCalendarStamp()}-${Math.floor(Math.random() * 9000 + 1000)}`;
 }
 
 function parseGstin(raw: string | undefined): { gstin: string | null; error?: string } {

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { listAdminOrders } from "@/lib/admin/orders";
 import { formatInr } from "@/lib/money";
+import { formatIst } from "@/lib/time";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -73,7 +74,7 @@ export default async function AdminOrdersPage({
                   <span className="rounded-full bg-muted px-2 py-0.5 text-xs">{o.status}</span>
                 </td>
                 <td className="px-3 py-2 tabular-nums">{formatInr(o.total_paise)}</td>
-                <td className="px-3 py-2 text-xs text-muted-foreground">{new Date(o.placed_at).toLocaleString("en-IN")}</td>
+                <td className="px-3 py-2 text-xs text-muted-foreground">{formatIst(o.placed_at)}</td>
                 <td className="px-3 py-2 text-right">
                   <Link href={`/admin/orders/${o.id}/bill`} className="text-xs underline">
                     Bill

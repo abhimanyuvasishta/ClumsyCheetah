@@ -7,13 +7,9 @@ import { productMatchesOffer } from "@/lib/offers/types";
 import type { OfferPickerProduct } from "@/lib/offers/admin";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { toIstDatetimeLocal } from "@/lib/time";
 
 const emptyState: ActionState = {};
-
-function toIsoLocal(d: Date) {
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
 
 export function OfferForm({
   products,
@@ -33,8 +29,8 @@ export function OfferForm({
   const [bestseller, setBestseller] = useState(false);
   const [fresh, setFresh] = useState(false);
 
-  const startDefault = toIsoLocal(new Date());
-  const endDefault = toIsoLocal(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
+  const startDefault = toIstDatetimeLocal(new Date());
+  const endDefault = toIstDatetimeLocal(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
 
   const matching = useMemo(
     () =>

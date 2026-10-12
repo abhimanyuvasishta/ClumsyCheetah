@@ -5,6 +5,7 @@ import { OrderEtaControls } from "@/components/admin/order-eta-controls";
 import { allowedNextStatuses } from "@/lib/admin/order-status";
 import { getAdminOrder } from "@/lib/admin/orders";
 import { formatInr } from "@/lib/money";
+import { formatIst } from "@/lib/time";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -25,7 +26,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           <span className="rounded-full bg-muted px-3 py-1 text-xs">{order.status}</span>
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
-          {order.contact_name} · {order.contact_phone}
+          {formatIst(order.placed_at)} · {order.contact_name} · {order.contact_phone}
           {order.contact_email ? ` · ${order.contact_email}` : ""}
         </p>
       </div>
@@ -84,7 +85,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               <li key={h.id} className="border-l-2 pl-3">
                 <span className="font-medium">{h.to_status}</span>
                 {h.from_status ? <span className="text-muted-foreground"> from {h.from_status}</span> : null}
-                <p className="text-xs text-muted-foreground">{new Date(h.created_at).toLocaleString("en-IN")}</p>
+                <p className="text-xs text-muted-foreground">{formatIst(h.created_at)}</p>
                 {h.note ? <p className="text-xs">{h.note}</p> : null}
               </li>
             ))}

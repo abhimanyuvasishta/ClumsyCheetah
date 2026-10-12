@@ -5,6 +5,7 @@ import { offerLabel } from "@/lib/offers/types";
 import { setOfferActive } from "@/app/admin/offers/actions";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { formatIst } from "@/lib/time";
 
 const sqlHint = `Run supabase/migrations/20260925120000_offers.sql in the Supabase SQL editor so the Offers tab can save live windows, coupons, and redemptions.`;
 
@@ -89,7 +90,7 @@ export default async function AdminOffersPage() {
                       </td>
                       <td className="px-3 py-2 font-mono text-xs">{offer.coupon_code ?? "—"}</td>
                       <td className="px-3 py-2 text-xs">
-                        {new Date(offer.starts_at).toLocaleString("en-IN")} → {new Date(offer.ends_at).toLocaleString("en-IN")}
+                        {formatIst(offer.starts_at)} → {formatIst(offer.ends_at)}
                       </td>
                       <td className="px-3 py-2 tabular-nums">
                         {offer.redemptionCount}
