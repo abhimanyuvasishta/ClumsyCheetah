@@ -7,6 +7,7 @@ import { quoteOffer } from "@/lib/offers/quote";
 import { offerLifecycle, type OfferRow } from "@/lib/offers/types";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 import { saveAccountPhoneAndAddress } from "@/lib/checkout/save-account";
+import { hoursFromProducts, promisedAtFromNow } from "@/lib/orders/eta";
 
 export type CheckoutLineInput = { variantId: string; quantity: number };
 export type CheckoutPayload = {
@@ -230,6 +231,12 @@ export async function placeCheckoutOrder(payload: CheckoutPayload): Promise<Plac
   if (saved.error) return { error: saved.error };
 
   const { data: location } = await db.from("locations").select("id").eq("is_active", true).limit(1).maybeSingle();
+  const productIds = [...new Set(priced.map((l) => l.productId))];
+  const { data: etaRows } = await db
+    .from("products")
+    .select("id, preparation_time_hours, delivery_time_hours")
+    .in("id", productIds);
+  const promisedAt = promisedAtFromNow(hoursFromProducts(etaRows ?? []));
   const orderNumber = nextOrderNumber();
 
   const { data: order, error } = await db
@@ -257,6 +264,7 @@ export async function placeCheckoutOrder(payload: CheckoutPayload): Promise<Plac
       delivery_fee_paise: appliedOffer?.kind === "FREE_DELIVERY" ? 0 : 0,
       total_paise: total,
       coupon_code: couponCode,
+      promised_at: promisedAt,
       channel: "WEB",
     })
     .select("id")

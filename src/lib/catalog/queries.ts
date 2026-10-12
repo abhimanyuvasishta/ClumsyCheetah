@@ -78,6 +78,7 @@ type ProductRow = {
   ingredients: string | null;
   serving_size: string | null;
   preparation_time_hours: number | null;
+  delivery_time_hours: number | null;
   shelf_life: string | null;
   storage_instructions: string | null;
   status: CatalogProduct["status"];
@@ -160,6 +161,7 @@ function mapProduct(row: ProductRow): CatalogProduct {
     ingredients: row.ingredients,
     servingSize: row.serving_size,
     preparationTimeHours: row.preparation_time_hours,
+    deliveryTimeHours: row.delivery_time_hours,
     shelfLife: row.shelf_life,
     storageInstructions: row.storage_instructions,
     status: row.status,
@@ -181,7 +183,7 @@ function mapProduct(row: ProductRow): CatalogProduct {
 const productSelect = `
   id, name, slug, sku, short_description, long_description, tags, thumbnail_url,
   is_featured, is_bestseller, is_new_arrival, is_vegetarian, is_eggless, contains_egg,
-  allergen_info, ingredients, serving_size, preparation_time_hours, shelf_life, storage_instructions,
+  allergen_info, ingredients, serving_size, preparation_time_hours, delivery_time_hours, shelf_life, storage_instructions,
   status, seo_title, seo_description,
   categories:primary_category_id (id, name, slug, description, image_url, sort_order),
   product_variants (*),

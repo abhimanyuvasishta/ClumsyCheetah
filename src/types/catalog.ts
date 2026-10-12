@@ -64,6 +64,7 @@ export type CatalogProduct = {
   ingredients: string | null;
   servingSize: string | null;
   preparationTimeHours: number | null;
+  deliveryTimeHours?: number | null;
   shelfLife: string | null;
   storageInstructions: string | null;
   status: ProductStatus;

@@ -7,6 +7,7 @@ import { lineTotalPaise } from "@/lib/money";
 import { ORDER_WRITE_ROLES } from "@/types/roles";
 import type { DatabaseEnums } from "@/types/database";
 import { allowedNextStatuses } from "@/lib/admin/order-status";
+import { hoursFromProducts, promisedAtFromNow } from "@/lib/orders/eta";
 
 export type OrderActionState = { error?: string; ok?: boolean };
 
@@ -43,6 +44,11 @@ export async function createManualOrder(_: OrderActionState, form: FormData): Pr
     const productName = Array.isArray(productRel) ? productRel[0]?.name : productRel?.name;
 
     const { data: location } = await db.from("locations").select("id").eq("is_active", true).limit(1).maybeSingle();
+    const { data: etaProduct } = await db
+      .from("products")
+      .select("preparation_time_hours, delivery_time_hours")
+      .eq("id", variant.product_id)
+      .maybeSingle();
 
     const { data: order, error } = await db
       .from("orders")
@@ -50,6 +56,7 @@ export async function createManualOrder(_: OrderActionState, form: FormData): Pr
         order_number: await orderNumber(),
         location_id: location?.id ?? null,
         status: "PLACED",
+        promised_at: promisedAtFromNow(hoursFromProducts(etaProduct ? [etaProduct] : [])),
         contact_name: name,
         contact_phone: phone,
         contact_email: email || null,
@@ -121,6 +128,22 @@ export async function updateOrderStatus(orderId: string, toStatus: DatabaseEnums
   });
   revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${orderId}`);
+  revalidatePath("/account/orders");
+  revalidatePath("/account", "layout");
+}
+
+export async function adjustOrderEta(orderId: string, deltaMinutes: number) {
+  await requireStaff(ORDER_WRITE_ROLES);
+  const db = await privilegedDb(ORDER_WRITE_ROLES);
+  const { data: order, error } = await db.from("orders").select("id, promised_at").eq("id", orderId).single();
+  if (error || !order) throw new Error(error?.message ?? "Order not found");
+  const base = order.promised_at ? new Date(order.promised_at).getTime() : Date.now();
+  const next = new Date(Math.max(Date.now(), base + deltaMinutes * 60 * 1000)).toISOString();
+  const { error: upErr } = await db.from("orders").update({ promised_at: next }).eq("id", orderId);
+  if (upErr) throw new Error(upErr.message);
+  revalidatePath(`/admin/orders/${orderId}`);
+  revalidatePath("/account/orders");
+  revalidatePath("/account", "layout");
 }
 
 export async function saveStaffNotes(orderId: string, form: FormData) {

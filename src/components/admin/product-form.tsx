@@ -71,6 +71,15 @@ export function ProductForm({
             ))}
           </select>
         </div>
+        <div>
+          <Label htmlFor="preparation_time_hours">Kitchen prep (hours)</Label>
+          <Input id="preparation_time_hours" name="preparation_time_hours" type="number" min="0" step="1" defaultValue={product?.preparation_time_hours ?? ""} className={field} />
+        </div>
+        <div>
+          <Label htmlFor="delivery_time_hours">Delivery estimate (hours)</Label>
+          <Input id="delivery_time_hours" name="delivery_time_hours" type="number" min="0" step="1" defaultValue={product?.delivery_time_hours ?? ""} className={field} />
+          <p className="mt-1 text-xs text-muted-foreground">Shown on the product and used as the starting countdown on My order.</p>
+        </div>
         <div className="sm:col-span-2">
           <Label htmlFor="image">Product photo</Label>
           {product?.thumbnail_url ? (

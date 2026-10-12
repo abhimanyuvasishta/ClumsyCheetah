@@ -18,6 +18,14 @@ function formBool(form: FormData, key: string): boolean {
   return form.get(key) === "on" || form.get(key) === "true";
 }
 
+function formHours(form: FormData, key: string): number | null {
+  const raw = formString(form, key);
+  if (!raw) return null;
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < 0) return null;
+  return Math.round(n);
+}
+
 async function uniqueSlug(base: string, excludeId?: string): Promise<string> {
   const supabase = await staffDb();
   let candidate = slugify(base);
@@ -61,6 +69,8 @@ export async function createProduct(_: ActionState, form: FormData): Promise<Act
         is_vegetarian: formBool(form, "is_vegetarian"),
         is_eggless: formBool(form, "is_eggless"),
         contains_egg: formBool(form, "contains_egg"),
+        preparation_time_hours: formHours(form, "preparation_time_hours"),
+        delivery_time_hours: formHours(form, "delivery_time_hours"),
       })
       .select("id")
       .single();
@@ -142,6 +152,8 @@ export async function updateProduct(productId: string, _: ActionState, form: For
         is_vegetarian: formBool(form, "is_vegetarian"),
         is_eggless: formBool(form, "is_eggless"),
         contains_egg: formBool(form, "contains_egg"),
+        preparation_time_hours: formHours(form, "preparation_time_hours"),
+        delivery_time_hours: formHours(form, "delivery_time_hours"),
         allergen_info: formString(form, "allergen_info") || null,
         ingredients: formString(form, "ingredients") || null,
         seo_title: formString(form, "seo_title") || null,

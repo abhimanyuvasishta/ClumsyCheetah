@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { saveStaffNotes, updateOrderStatus } from "@/app/admin/orders/actions";
+import { OrderEtaControls } from "@/components/admin/order-eta-controls";
 import { allowedNextStatuses } from "@/lib/admin/order-status";
 import { getAdminOrder } from "@/lib/admin/orders";
 import { formatInr } from "@/lib/money";
@@ -74,6 +75,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           <span className="font-medium">Total {formatInr(order.total_paise)}</span>
         </div>
       </section>
+      <OrderEtaControls orderId={order.id} promisedAt={order.promised_at} />
       <section className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-lg border bg-white p-4">
           <h2 className="text-sm font-medium">Timeline</h2>

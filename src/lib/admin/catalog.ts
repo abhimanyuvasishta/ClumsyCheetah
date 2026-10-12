@@ -37,6 +37,8 @@ export type AdminProductDetail = {
   ingredients: string | null;
   seo_title: string | null;
   seo_description: string | null;
+  preparation_time_hours: number | null;
+  delivery_time_hours: number | null;
   product_variants: {
     id: string;
     sku: string;
@@ -71,7 +73,7 @@ export async function getAdminProduct(id: string): Promise<AdminProductDetail | 
   const { data, error } = await supabase
     .from("products")
     .select(
-      "id, name, slug, sku, status, thumbnail_url, is_bestseller, is_featured, is_new_arrival, is_vegetarian, is_eggless, contains_egg, updated_at, short_description, long_description, primary_category_id, allergen_info, ingredients, seo_title, seo_description, categories:primary_category_id (name, slug), product_variants (id, sku, name, flavour, weight_label, price_paise, compare_at_paise, status, sort_order)",
+      "id, name, slug, sku, status, thumbnail_url, is_bestseller, is_featured, is_new_arrival, is_vegetarian, is_eggless, contains_egg, updated_at, short_description, long_description, primary_category_id, allergen_info, ingredients, seo_title, seo_description, preparation_time_hours, delivery_time_hours, categories:primary_category_id (name, slug), product_variants (id, sku, name, flavour, weight_label, price_paise, compare_at_paise, status, sort_order)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -84,4 +86,44 @@ export async function listAdminCategories() {
   if (!supabase) return [];
   const { data } = await supabase.from("categories").select("id, name, slug").eq("is_active", true).order("sort_order");
   return data ?? [];
+}
+
+export type AdminCollectionRow = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  image_url: string | null;
+  is_active: boolean;
+  sort_order: number;
+};
+
+export async function listAdminCollections(): Promise<AdminCollectionRow[]> {
+  const supabase = await createServerSupabaseClient();
+  if (!supabase) return [];
+  const { data } = await supabase
+    .from("collections")
+    .select("id, name, slug, description, image_url, is_active, sort_order")
+    .is("deleted_at", null)
+    .order("sort_order");
+  return (data ?? []) as AdminCollectionRow[];
+}
+
+export async function getAdminCollection(id: string) {
+  const supabase = await createServerSupabaseClient();
+  if (!supabase) return null;
+  const [{ data: collection }, { data: links }] = await Promise.all([
+    supabase
+      .from("collections")
+      .select("id, name, slug, description, image_url, is_active, sort_order")
+      .eq("id", id)
+      .is("deleted_at", null)
+      .maybeSingle(),
+    supabase.from("collection_products").select("product_id").eq("collection_id", id),
+  ]);
+  if (!collection) return null;
+  return {
+    ...(collection as AdminCollectionRow),
+    productIds: (links ?? []).map((row) => row.product_id as string),
+  };
 }

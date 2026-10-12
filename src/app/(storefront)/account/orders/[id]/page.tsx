@@ -5,6 +5,7 @@ import { getAuthUser } from "@/lib/auth/staff";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { formatInr } from "@/lib/money";
 import { OrderProductFeedback } from "@/components/storefront/order-product-feedback";
+import { OrderEtaClock } from "@/components/storefront/order-eta-clock";
 
 export const metadata: Metadata = { title: "Order" };
 export const dynamic = "force-dynamic";
@@ -18,7 +19,7 @@ export default async function AccountOrderDetailPage({ params }: { params: Promi
   const { data: order } = await supabase
     .from("orders")
     .select(
-      "id, order_number, status, total_paise, subtotal_paise, placed_at, contact_name, shipping_address, order_items (id, product_id, product_name, variant_name, quantity, unit_price_paise, line_total_paise)",
+      "id, order_number, status, total_paise, subtotal_paise, placed_at, promised_at, contact_name, shipping_address, order_items (id, product_id, product_name, variant_name, quantity, unit_price_paise, line_total_paise)",
     )
     .eq("id", id)
     .eq("user_id", user.userId)
@@ -48,6 +49,7 @@ export default async function AccountOrderDetailPage({ params }: { params: Promi
           <span className="rounded-full bg-secondary px-3 py-1 text-xs">{order.status.replaceAll("_", " ")}</span>
         </div>
         <p className="mt-1 text-sm text-muted-foreground">{new Date(order.placed_at).toLocaleString("en-IN")}</p>
+        <OrderEtaClock promisedAt={order.promised_at} status={order.status} />
         <ul className="mt-6 divide-y text-sm">
           {(order.order_items ?? []).map((item, index) => {
             const firstOfProduct =

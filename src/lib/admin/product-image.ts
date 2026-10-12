@@ -32,3 +32,25 @@ export async function storeProductImage(
   const { data } = supabase.storage.from("product-images").getPublicUrl(path);
   return { url: data.publicUrl };
 }
+
+export async function storeBrandImage(
+  supabase: SupabaseClient,
+  kind: "logo" | "icon" | "favicon",
+  file: File,
+): Promise<{ url: string } | { error: string }> {
+  if (!ALLOWED.has(file.type)) {
+    return { error: "Use a JPG, PNG, WebP, GIF, or AVIF image" };
+  }
+  if (file.size > MAX_BYTES) {
+    return { error: "Image must be 8 MB or smaller" };
+  }
+  const ext = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "png";
+  const path = `brand/${kind}-${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage.from("product-images").upload(path, file, {
+    contentType: file.type,
+    upsert: false,
+  });
+  if (error) return { error: error.message };
+  const { data } = supabase.storage.from("product-images").getPublicUrl(path);
+  return { url: data.publicUrl };
+}

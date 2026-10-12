@@ -266,7 +266,9 @@ export function ProductDetail({
             <details className="border-t py-4">
               <summary className="cursor-pointer font-medium">Delivery</summary>
               <p className="mt-2 text-sm text-muted-foreground">
-                Same-day when the slot’s still open. {product.preparationTimeHours ? `Kitchen needs about ${product.preparationTimeHours} hours.` : null}
+                Same-day when the slot’s still open.
+                {product.preparationTimeHours ? ` Kitchen needs about ${product.preparationTimeHours} hours.` : ""}
+                {product.deliveryTimeHours ? ` Delivery is about ${product.deliveryTimeHours} hours after that.` : ""}
               </p>
             </details>
           </div>

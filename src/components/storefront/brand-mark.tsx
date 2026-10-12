@@ -1,6 +1,16 @@
 import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { useStorefrontConfig } from "@/components/storefront/storefront-config-provider";
+
+function useLogoSrc() {
+  try {
+    const { brand } = useStorefrontConfig();
+    return brand.logoUrl || "/brand/logo.png";
+  } catch {
+    return "/brand/logo.png";
+  }
+}
 
 const sizes = {
   sm: { px: 40, className: "size-10" },
@@ -19,6 +29,7 @@ type BrandMarkProps = {
 
 export function BrandMark({ className, size = "md", onDark = false, markOnly = false }: BrandMarkProps) {
   const seal = sizes[size];
+  const src = useLogoSrc();
 
   return (
     <Link
@@ -34,11 +45,12 @@ export function BrandMark({ className, size = "md", onDark = false, markOnly = f
         )}
       >
         <Image
-          src="/brand/logo.png"
+          src={src}
           alt=""
           fill
           className="object-contain"
           sizes={`${seal.px}px`}
+          unoptimized={src.startsWith("http")}
           priority={size !== "lg"}
         />
       </span>

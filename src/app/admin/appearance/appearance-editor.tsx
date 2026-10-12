@@ -12,12 +12,18 @@ import {
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { paiseToRupeesInput, rupeesToPaise } from "@/lib/money";
+import { BrandAssetsForm } from "@/components/admin/brand-assets-form";
+import { FREE_FONT_OPTIONS, googleFontsStylesheetHref } from "@/lib/storefront/fonts";
 
 const tabs = [
   { id: "theme", label: "Colour" },
+  { id: "fonts", label: "Fonts" },
+  { id: "brand", label: "Logo & icons" },
   { id: "layout", label: "Layout" },
   { id: "chrome", label: "Header & footer" },
   { id: "home", label: "Home writeups" },
+  { id: "about", label: "About" },
+  { id: "faq", label: "FAQs" },
   { id: "pages", label: "All pages" },
 ] as const;
 
@@ -47,45 +53,40 @@ export function AppearanceEditor({ initial }: { initial: StorefrontConfig }) {
   function applyPreset(id: Exclude<ColorPresetId, "custom">) {
     setConfig((current) => ({
       ...current,
-      theme: { preset: id, colors: { ...COLOR_PRESETS[id] } },
+      theme: { ...current.theme, preset: id, colors: { ...COLOR_PRESETS[id] } },
     }));
   }
 
   function setColor(key: keyof ThemeColors, value: string) {
     setConfig((current) => ({
       ...current,
-      theme: { preset: "custom", colors: { ...current.theme.colors, [key]: value } },
+      theme: { ...current.theme, preset: "custom", colors: { ...current.theme.colors, [key]: value } },
     }));
   }
 
-  return (
-    <form
-      action={() => {
-        const payload = new FormData();
-        payload.set("payload", JSON.stringify(config));
-        return action(payload);
-      }}
-      className="space-y-5"
-    >
+  const editor = (
+    <>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold">Website appearance</h1>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            One save updates what customers see: colours, layout, and copy on every storefront page. Catalog prices stay in Catalog.
+            One save updates what customers see: colours, fonts, layout, and copy. Logos upload on the Logo & icons tab.
           </p>
         </div>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-            onClick={() => setConfig(defaultStorefrontConfig)}
-          >
-            Reset defaults
-          </button>
-          <button type="submit" disabled={pending} className={cn(buttonVariants({ size: "sm" }))}>
-            {pending ? "Publishing…" : "Publish to website"}
-          </button>
-        </div>
+        {tab !== "brand" ? (
+          <div className="flex gap-2">
+            <button
+              type="button"
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+              onClick={() => setConfig(defaultStorefrontConfig)}
+            >
+              Reset defaults
+            </button>
+            <button type="submit" disabled={pending} className={cn(buttonVariants({ size: "sm" }))}>
+              {pending ? "Publishing…" : "Publish to website"}
+            </button>
+          </div>
+        ) : null}
       </div>
       {state.error ? <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">{state.error}</p> : null}
       {state.ok ? <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm">Published. Open View storefront to check.</p> : null}
@@ -102,6 +103,29 @@ export function AppearanceEditor({ initial }: { initial: StorefrontConfig }) {
           </button>
         ))}
       </div>
+    </>
+  );
+
+  if (tab === "brand") {
+    return (
+      <div className="space-y-5">
+        {editor}
+        <p className="text-sm text-muted-foreground">Uploads go live immediately. Use PNG or WebP with a transparent background when you can.</p>
+        <BrandAssetsForm brand={config.brand} />
+      </div>
+    );
+  }
+
+  return (
+    <form
+      action={() => {
+        const payload = new FormData();
+        payload.set("payload", JSON.stringify(config));
+        return action(payload);
+      }}
+      className="space-y-5"
+    >
+      {editor}
 
       {tab === "theme" ? (
         <section className="space-y-4">
@@ -138,6 +162,134 @@ export function AppearanceEditor({ initial }: { initial: StorefrontConfig }) {
               </Field>
             ))}
           </div>
+        </section>
+      ) : null}
+
+      {tab === "fonts" ? (
+        <section className="space-y-4">
+          <link rel="stylesheet" href={googleFontsStylesheetHref(config.theme.headingFont, config.theme.bodyFont)} />
+          <p className="text-sm text-muted-foreground">
+            These are free Google Fonts. Pick from the list or type any Google Font family name (for example “Newsreader”).
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Headings">
+              <input
+                className={inputClass}
+                list="cc-heading-fonts"
+                value={config.theme.headingFont}
+                onChange={(e) => patch("theme", { ...config.theme, headingFont: e.target.value })}
+              />
+              <datalist id="cc-heading-fonts">
+                {FREE_FONT_OPTIONS.map((name) => (
+                  <option key={name} value={name} />
+                ))}
+              </datalist>
+              <p className="mt-2 font-heading text-2xl" style={{ fontFamily: `"${config.theme.headingFont}", Georgia, serif` }}>
+                Clumsy Cheetah
+              </p>
+            </Field>
+            <Field label="Body text">
+              <input
+                className={inputClass}
+                list="cc-body-fonts"
+                value={config.theme.bodyFont}
+                onChange={(e) => patch("theme", { ...config.theme, bodyFont: e.target.value })}
+              />
+              <datalist id="cc-body-fonts">
+                {FREE_FONT_OPTIONS.map((name) => (
+                  <option key={`b-${name}`} value={name} />
+                ))}
+              </datalist>
+              <p className="mt-2 text-sm" style={{ fontFamily: `"${config.theme.bodyFont}", sans-serif` }}>
+                Boxes that leave looking proud. The clumsiness is in the branding, not the crumb.
+              </p>
+            </Field>
+          </div>
+        </section>
+      ) : null}
+
+      {tab === "about" ? (
+        <section className="space-y-4">
+          <p className="text-sm text-muted-foreground">This is the /about page. Heading and intro plus extra sections.</p>
+          <Field label="Eyebrow">
+            <input className={inputClass} value={config.pages.about.eyebrow ?? ""} onChange={(e) => patch("pages", { ...config.pages, about: { ...config.pages.about, eyebrow: e.target.value } })} />
+          </Field>
+          <Field label="Heading">
+            <input className={inputClass} value={config.pages.about.heading} onChange={(e) => patch("pages", { ...config.pages, about: { ...config.pages.about, heading: e.target.value } })} />
+          </Field>
+          <Field label="Intro">
+            <textarea className={areaClass} value={config.pages.about.body} onChange={(e) => patch("pages", { ...config.pages, about: { ...config.pages.about, body: e.target.value } })} />
+          </Field>
+          {config.aboutBlocks.map((block, i) => (
+            <div key={i} className="rounded-lg border bg-white p-4">
+              <div className="mb-2 flex justify-between">
+                <p className="text-xs font-medium text-muted-foreground">Section {i + 1}</p>
+                <button
+                  type="button"
+                  className="text-xs underline"
+                  onClick={() => patch("aboutBlocks", config.aboutBlocks.filter((_, j) => j !== i))}
+                >
+                  Delete
+                </button>
+              </div>
+              <input className={inputClass} placeholder="Heading" value={block.heading} onChange={(e) => {
+                const aboutBlocks = [...config.aboutBlocks];
+                aboutBlocks[i] = { ...block, heading: e.target.value };
+                patch("aboutBlocks", aboutBlocks);
+              }} />
+              <textarea className={cn(areaClass, "mt-2")} placeholder="Body" value={block.body} onChange={(e) => {
+                const aboutBlocks = [...config.aboutBlocks];
+                aboutBlocks[i] = { ...block, body: e.target.value };
+                patch("aboutBlocks", aboutBlocks);
+              }} />
+            </div>
+          ))}
+          <button
+            type="button"
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+            onClick={() => patch("aboutBlocks", [...config.aboutBlocks, { heading: "", body: "" }])}
+          >
+            Add section
+          </button>
+        </section>
+      ) : null}
+
+      {tab === "faq" ? (
+        <section className="space-y-4">
+          <p className="text-sm text-muted-foreground">Question and answer pairs on /faq.</p>
+          <Field label="Page heading">
+            <input className={inputClass} value={config.pages.faq.heading} onChange={(e) => patch("pages", { ...config.pages, faq: { ...config.pages.faq, heading: e.target.value } })} />
+          </Field>
+          <Field label="Intro">
+            <textarea className={areaClass} value={config.pages.faq.body} onChange={(e) => patch("pages", { ...config.pages, faq: { ...config.pages.faq, body: e.target.value } })} />
+          </Field>
+          {config.faqs.map((item, i) => (
+            <div key={i} className="rounded-lg border bg-white p-4">
+              <div className="mb-2 flex justify-between">
+                <p className="text-xs font-medium text-muted-foreground">FAQ {i + 1}</p>
+                <button type="button" className="text-xs underline" onClick={() => patch("faqs", config.faqs.filter((_, j) => j !== i))}>
+                  Delete
+                </button>
+              </div>
+              <input className={inputClass} placeholder="Question" value={item.question} onChange={(e) => {
+                const faqs = [...config.faqs];
+                faqs[i] = { ...item, question: e.target.value };
+                patch("faqs", faqs);
+              }} />
+              <textarea className={cn(areaClass, "mt-2")} placeholder="Answer" value={item.answer} onChange={(e) => {
+                const faqs = [...config.faqs];
+                faqs[i] = { ...item, answer: e.target.value };
+                patch("faqs", faqs);
+              }} />
+            </div>
+          ))}
+          <button
+            type="button"
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+            onClick={() => patch("faqs", [...config.faqs, { question: "", answer: "" }])}
+          >
+            Add question
+          </button>
         </section>
       ) : null}
 
@@ -372,9 +524,7 @@ export function AppearanceEditor({ initial }: { initial: StorefrontConfig }) {
           {(
             [
               ["shop", "Shop"],
-              ["about", "About"],
               ["contact", "Contact"],
-              ["faq", "FAQ"],
               ["delivery", "Delivery"],
               ["privacy", "Privacy"],
               ["terms", "Terms"],

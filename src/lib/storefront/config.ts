@@ -1,4 +1,5 @@
 import { categoryHeroCopy, homepageContent } from "@/data/homepage";
+import { sanitizeFontFamily } from "@/lib/storefront/fonts";
 
 export const STOREFRONT_SETTINGS_KEY = "storefront";
 
@@ -50,10 +51,14 @@ export type CollectionHeroStyle = "navy" | "cream";
 export type NavLink = { href: string; label: string };
 export type Cta = { href: string; label: string };
 export type CopyPage = { eyebrow?: string; heading: string; body: string };
+export type FaqItem = { question: string; answer: string };
+export type AboutBlock = { heading: string; body: string };
+export type BrandAssets = { logoUrl: string; iconUrl: string; faviconUrl: string };
 
 export type StorefrontConfig = {
   version: 1;
-  theme: { preset: ColorPresetId; colors: ThemeColors };
+  theme: { preset: ColorPresetId; colors: ThemeColors; headingFont: string; bodyFont: string };
+  brand: BrandAssets;
   layout: {
     heroPlacement: HeroPlacement;
     headerSticky: boolean;
@@ -113,12 +118,15 @@ export type StorefrontConfig = {
     wishlist: CopyPage & { emptyTitle: string; emptyBody: string };
     product: { addToCart: string };
   };
+  aboutBlocks: AboutBlock[];
+  faqs: FaqItem[];
   collections: Record<string, { heading: string; body: string }>;
 };
 
 export const defaultStorefrontConfig: StorefrontConfig = {
   version: 1,
-  theme: { preset: "seal", colors: { ...COLOR_PRESETS.seal } },
+  theme: { preset: "seal", colors: { ...COLOR_PRESETS.seal }, headingFont: "Fraunces", bodyFont: "Geist" },
+  brand: { logoUrl: "/brand/logo.png", iconUrl: "/brand/logo.png", faviconUrl: "/brand/logo.png" },
   layout: {
     heroPlacement: "image-right",
     headerSticky: true,
@@ -242,6 +250,22 @@ export const defaultStorefrontConfig: StorefrontConfig = {
     },
     product: { addToCart: "Add to cart" },
   },
+  aboutBlocks: [
+    {
+      heading: "The kitchen",
+      body: "We bake in Bandra: laminated mornings, chocolate afternoons, and boxes that leave looking proud.",
+    },
+  ],
+  faqs: [
+    {
+      question: "Do you have eggless options?",
+      answer: "Eggless options are marked on every product.",
+    },
+    {
+      question: "Can I get same-day delivery?",
+      answer: "Same-day depends on slot capacity, pin code, and how long the bake needs in the kitchen.",
+    },
+  ],
   collections: Object.fromEntries(
     Object.entries(categoryHeroCopy).map(([slug, copy]) => [slug, { ...copy }]),
   ),
@@ -318,10 +342,23 @@ export function mergeStorefrontConfig(raw: unknown): StorefrontConfig {
   merged.chrome.popularSearches = merged.chrome.popularSearches.map((term) => term.trim()).filter(Boolean);
   const threshold = Number(merged.chrome.freeDeliveryThresholdPaise);
   merged.chrome.freeDeliveryThresholdPaise = Number.isFinite(threshold) && threshold > 0 ? Math.round(threshold) : defaultStorefrontConfig.chrome.freeDeliveryThresholdPaise;
+  merged.theme.headingFont = sanitizeFontFamily(merged.theme.headingFont, "Fraunces");
+  merged.theme.bodyFont = sanitizeFontFamily(merged.theme.bodyFont, "Geist");
+  merged.brand = {
+    logoUrl: typeof merged.brand?.logoUrl === "string" && merged.brand.logoUrl.trim() ? merged.brand.logoUrl.trim() : defaultStorefrontConfig.brand.logoUrl,
+    iconUrl: typeof merged.brand?.iconUrl === "string" && merged.brand.iconUrl.trim() ? merged.brand.iconUrl.trim() : defaultStorefrontConfig.brand.iconUrl,
+    faviconUrl: typeof merged.brand?.faviconUrl === "string" && merged.brand.faviconUrl.trim() ? merged.brand.faviconUrl.trim() : defaultStorefrontConfig.brand.faviconUrl,
+  };
+  merged.aboutBlocks = (merged.aboutBlocks ?? [])
+    .filter((block) => block.heading.trim() || block.body.trim())
+    .map((block) => ({ heading: block.heading.trim(), body: block.body.trim() }));
+  merged.faqs = (merged.faqs ?? [])
+    .filter((item) => item.question.trim() || item.answer.trim())
+    .map((item) => ({ question: item.question.trim(), answer: item.answer.trim() }));
   return walkHrefs(merged) as StorefrontConfig;
 }
 
-export function storefrontCssVars(colors: ThemeColors): Record<string, string> {
+export function storefrontCssVars(colors: ThemeColors, headingFont?: string, bodyFont?: string): Record<string, string> {
   const secondary = `color-mix(in srgb, ${colors.sky} 22%, ${colors.cream})`;
   const muted = `color-mix(in srgb, ${colors.sky} 12%, ${colors.cream})`;
   const border = `color-mix(in srgb, ${colors.navy} 16%, ${colors.cream})`;
@@ -351,6 +388,8 @@ export function storefrontCssVars(colors: ThemeColors): Record<string, string> {
     "--input": border,
     "--ring": colors.sky,
   };
+  if (headingFont) tokens["--font-heading"] = `"${headingFont}", Georgia, serif`;
+  if (bodyFont) tokens["--font-sans"] = `"${bodyFont}", ui-sans-serif, system-ui, sans-serif`;
   for (const [key, value] of Object.entries(tokens)) {
     tokens[`--color-${key.slice(2)}`] = value;
   }
