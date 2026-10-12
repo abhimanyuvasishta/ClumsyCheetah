@@ -7,7 +7,7 @@ import { lineTotalPaise } from "@/lib/money";
 import { ORDER_WRITE_ROLES } from "@/types/roles";
 import type { DatabaseEnums } from "@/types/database";
 import { allowedNextStatuses } from "@/lib/admin/order-status";
-import { hoursFromProducts, promisedAtFromNow } from "@/lib/orders/eta";
+import { hoursFromProducts, isQuarterHour, promisedAtFromNow, sanitizeEtaMessage } from "@/lib/orders/eta";
 import { istCalendarStamp } from "@/lib/time";
 
 export type OrderActionState = { error?: string; ok?: boolean };
@@ -128,14 +128,39 @@ export async function updateOrderStatus(orderId: string, toStatus: DatabaseEnums
   revalidatePath("/account", "layout");
 }
 
-export async function adjustOrderEta(orderId: string, deltaMinutes: number) {
+const ETA_DELTAS = new Set([-60, -30, 30, 60]);
+
+export async function updateOrderEta(orderId: string, form: FormData) {
   await requireStaff(ORDER_WRITE_ROLES);
   const db = await privilegedDb(ORDER_WRITE_ROLES);
   const { data: order, error } = await db.from("orders").select("id, promised_at").eq("id", orderId).single();
   if (error || !order) throw new Error(error?.message ?? "Order not found");
-  const base = order.promised_at ? new Date(order.promised_at).getTime() : Date.now();
-  const next = new Date(Math.max(Date.now(), base + deltaMinutes * 60 * 1000)).toISOString();
-  const { error: upErr } = await db.from("orders").update({ promised_at: next }).eq("id", orderId);
+
+  const patch: { promised_at?: string; eta_message: string | null } = {
+    eta_message: sanitizeEtaMessage(String(form.get("eta_message") ?? "")),
+  };
+
+  const deltaRaw = form.get("delta_minutes");
+  const promisedRaw = String(form.get("promised_at") ?? "").trim();
+  const intent = String(form.get("intent") ?? "");
+
+  if (deltaRaw != null && String(deltaRaw) !== "") {
+    const deltaMinutes = Number(deltaRaw);
+    if (!ETA_DELTAS.has(deltaMinutes)) throw new Error("Use the time buttons or the 15 minute list");
+    const base = order.promised_at ? new Date(order.promised_at).getTime() : Date.now();
+    patch.promised_at = new Date(Math.max(Date.now(), base + deltaMinutes * 60 * 1000)).toISOString();
+  } else if (intent === "set") {
+    if (!promisedRaw) throw new Error("Pick a time from the 15 minute list");
+    const next = new Date(promisedRaw);
+    if (Number.isNaN(next.getTime()) || !isQuarterHour(next)) throw new Error("Pick a time from the 15 minute list");
+    const latest = Date.now() + 48 * 60 * 60 * 1000;
+    if (next.getTime() < Date.now() - 60 * 1000 || next.getTime() > latest) {
+      throw new Error("Pick a time between now and the next two days");
+    }
+    patch.promised_at = next.toISOString();
+  }
+
+  const { error: upErr } = await db.from("orders").update(patch).eq("id", orderId);
   if (upErr) throw new Error(upErr.message);
   revalidatePath(`/admin/orders/${orderId}`);
   revalidatePath("/account/orders");

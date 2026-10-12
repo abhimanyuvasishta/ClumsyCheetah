@@ -14,9 +14,11 @@ function partsFromMs(ms: number) {
 export function OrderEtaClock({
   promisedAt,
   status,
+  message,
 }: {
   promisedAt: string | null;
   status: string;
+  message?: string | null;
 }) {
   const [now, setNow] = useState(() => Date.now());
 
@@ -25,6 +27,10 @@ export function OrderEtaClock({
     return () => window.clearInterval(id);
   }, []);
 
+  const kitchenNote = message?.trim() ? (
+    <p className="mt-3 rounded-xl bg-background/70 px-3 py-2 text-sm">{message.trim()}</p>
+  ) : null;
+
   if (status === "DELIVERED") {
     return <p className="mt-4 text-sm">This order has arrived. Enjoy.</p>;
   }
@@ -32,7 +38,12 @@ export function OrderEtaClock({
     return <p className="mt-4 text-sm text-muted-foreground">This order is no longer on the way.</p>;
   }
   if (!promisedAt) {
-    return <p className="mt-4 text-sm text-muted-foreground">Kitchen timing will show here once we confirm the order.</p>;
+    return (
+      <div className="mt-4">
+        <p className="text-sm text-muted-foreground">Kitchen timing will show here once we confirm the order.</p>
+        {kitchenNote}
+      </div>
+    );
   }
 
   const { hours, minutes, seconds, done } = partsFromMs(new Date(promisedAt).getTime() - now);
@@ -50,6 +61,7 @@ export function OrderEtaClock({
       <p className="mt-1 text-xs text-muted-foreground">
         {formatIst(promisedAt)} · kitchen may move this later or earlier
       </p>
+      {kitchenNote}
     </div>
   );
 }
